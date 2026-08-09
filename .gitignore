@@ -1,0 +1,12 @@
+# Unrelated npm cache that happens to live in this directory
+.npm-cache/
+
+# Build products
+build/
+dist/
+
+# Generated icon intermediates — AppIcon.icns is committed, the iconset is not
+*.iconset/
+
+# macOS
+.DS_Store
