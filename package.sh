@@ -210,4 +210,4 @@ case "$TARGET" in
 	*) echo "Usage: $0 [dmg|pkg|both]" >&2; exit 1 ;;
 esac
 
-echo "Done. Not notarized — first launch needs right-click > Open."
+echo "Done. Not notarized — see READ ME FIRST for the first-launch steps."
