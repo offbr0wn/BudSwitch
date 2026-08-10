@@ -193,7 +193,7 @@ make_pkg() {
 }
 
 TARGET="${1:-dmg}"
-echo "Packaging $APP_NAME $VERSION…"
+echo "Packaging $APP_NAME ${VERSION}…"
 
 case "$TARGET" in
 	dmg) make_dmg ;;
