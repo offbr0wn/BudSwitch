@@ -1,0 +1,61 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # A newer push makes an in-flight run redundant.
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Build
+        run: ./build.sh
+
+      - name: Verify the app bundle
+        run: |
+          set -euo pipefail
+          APP=build/BudSwitch.app
+
+          # A universal binary is the whole point of building both slices — catch it here
+          # rather than after someone on an Intel Mac reports it won't launch.
+          archs=$(lipo -archs "$APP/Contents/MacOS/BudSwitch")
+          echo "architectures: $archs"
+          for want in arm64 x86_64; do
+            grep -q "$want" <<<"$archs" || { echo "::error::missing $want slice"; exit 1; }
+          done
+
+          # Without NSBluetoothAlwaysUsageDescription the app is killed by TCC on its
+          # first IOBluetooth call, which is invisible until someone runs it.
+          plutil -extract NSBluetoothAlwaysUsageDescription raw "$APP/Contents/Info.plist" >/dev/null \
+            || { echo "::error::Info.plist is missing NSBluetoothAlwaysUsageDescription"; exit 1; }
+
+          # LSUIElement keeps it out of the Dock; losing it changes the app's whole shape.
+          [ "$(plutil -extract LSUIElement raw "$APP/Contents/Info.plist")" = "true" ] \
+            || { echo "::error::LSUIElement must be true"; exit 1; }
+
+          codesign --verify --verbose=2 "$APP"
+          echo "bundle verified"
+
+      - name: Package
+        run: ./package.sh dmg
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: BudSwitch-dmg
+          path: dist/*.dmg
+          retention-days: 14

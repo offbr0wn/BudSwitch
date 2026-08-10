@@ -1,0 +1,98 @@
+name: Release
+
+# Tag a version and this publishes the release:
+#   ./scripts/bump-version.sh 1.1.0
+#   git push origin main --tags
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the tag matches Info.plist
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          plist=$(plutil -extract CFBundleShortVersionString raw Resources/Info.plist)
+          echo "tag=$tag  Info.plist=$plist"
+          # A mismatch ships a DMG whose filename and contents disagree — which has
+          # already happened once by hand.
+          [ "$tag" = "$plist" ] || {
+            echo "::error::tag v$tag does not match Info.plist $plist"
+            exit 1
+          }
+
+      - name: Build
+        run: ./build.sh
+
+      - name: Verify the app bundle
+        run: |
+          set -euo pipefail
+          APP=build/BudSwitch.app
+          archs=$(lipo -archs "$APP/Contents/MacOS/BudSwitch")
+          for want in arm64 x86_64; do
+            grep -q "$want" <<<"$archs" || { echo "::error::missing $want slice"; exit 1; }
+          done
+          plutil -extract NSBluetoothAlwaysUsageDescription raw "$APP/Contents/Info.plist" >/dev/null
+          codesign --verify --verbose=2 "$APP"
+
+      - name: Package
+        run: ./package.sh dmg
+
+      - name: Verify the DMG
+        run: |
+          set -euo pipefail
+          version=$(plutil -extract CFBundleShortVersionString raw Resources/Info.plist)
+          dmg="dist/BudSwitch-$version.dmg"
+          [ -f "$dmg" ] || { echo "::error::$dmg was not produced"; exit 1; }
+
+          hdiutil attach "$dmg" -nobrowse -quiet -mountpoint /tmp/verify
+
+          # The drag-to-Applications layout is written by Finder via AppleScript, which
+          # needs a real Finder session. CI runners have none, so this check exists to
+          # make that failure loud rather than shipping a DMG that opens as a bare list.
+          [ -f /tmp/verify/.DS_Store ] || {
+            echo "::error::DMG has no window layout — Finder was unavailable on the runner."
+            echo "::error::Build the release DMG locally with ./package.sh dmg instead."
+            hdiutil detach /tmp/verify -quiet
+            exit 1
+          }
+
+          [ -L /tmp/verify/Applications ] || { echo "::error::missing Applications symlink"; exit 1; }
+          inner=$(plutil -extract CFBundleShortVersionString raw /tmp/verify/BudSwitch.app/Contents/Info.plist)
+          [ "$inner" = "$version" ] || { echo "::error::app inside DMG is $inner, expected $version"; exit 1; }
+          codesign --verify --verbose=2 /tmp/verify/BudSwitch.app
+
+          hdiutil detach /tmp/verify -quiet
+          echo "DMG verified"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version=$(plutil -extract CFBundleShortVersionString raw Resources/Info.plist)
+          # Install steps first — every release needs the right-click-to-open
+          # instruction, or people conclude the app is broken. Then the commit list
+          # since the previous tag.
+          sed "s/__VERSION__/$version/g" .github/release-template.md > notes.md
+          previous=$(git tag --sort=-version:refname | grep -v "^$GITHUB_REF_NAME$" | head -1)
+          if [ -n "$previous" ]; then
+            {
+              echo
+              echo "## Changes since $previous"
+              echo
+              git log --pretty="* %s" "$previous..$GITHUB_REF_NAME" | grep -v "^\* Co-Authored-By"
+            } >> notes.md
+          fi
+
+          gh release create "$GITHUB_REF_NAME" "dist/BudSwitch-$version.dmg" \
+            --title "BudSwitch $version" \
+            --notes-file notes.md

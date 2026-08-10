@@ -8,6 +8,8 @@
 
 [![Download](https://img.shields.io/badge/Download-BudSwitch%201.0.0-5B4FDB?style=for-the-badge)](../../releases/latest)
 &nbsp;
+[![Build](https://github.com/offbr0wn/BudSwitch/actions/workflows/build.yml/badge.svg)](https://github.com/offbr0wn/BudSwitch/actions/workflows/build.yml)
+&nbsp;
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-333?style=for-the-badge)
 &nbsp;
 ![Universal](https://img.shields.io/badge/Universal-Apple%20Silicon%20%2B%20Intel-333?style=for-the-badge)
@@ -140,6 +142,15 @@ cd BudSwitch
 
 No Xcode project — `build.sh` drives `swiftc` directly and produces a universal binary.
 `./package.sh dmg` builds the installer.
+
+Every push to `main` and every pull request builds on a macOS runner and checks that the
+binary is universal, the Bluetooth usage description is present, `LSUIElement` is set, and
+the signature verifies. Tagging a version publishes a release:
+
+```bash
+./scripts/bump-version.sh 1.1.0
+git push origin main --tags
+```
 
 > [!NOTE]
 > Always launch via `open`, never by running the binary directly. A bare executable is
