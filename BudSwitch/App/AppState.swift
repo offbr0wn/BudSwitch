@@ -171,7 +171,8 @@ final class AppState: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Log.app.log("toggle requested via notification")
-            Task { @MainActor in self?.toggle(showHUD: true) }
+            guard let self else { return }
+            Task { @MainActor in self.toggle(showHUD: true) }
         }
     }
 
@@ -310,7 +311,8 @@ final class AppState: ObservableObject {
 
     private func startPolling() {
         let timer = Timer(timeInterval: pollInterval, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.refreshRoute() }
+            guard let self else { return }
+            Task { @MainActor in self.refreshRoute() }
         }
         // .common so polling keeps running while a menu is open — otherwise the panel
         // freezes its own state display exactly when it is being looked at.
