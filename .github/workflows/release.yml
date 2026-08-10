@@ -89,7 +89,10 @@ jobs:
               echo
               echo "## Changes since $previous"
               echo
-              git log --pretty="* %s" "$previous..$GITHUB_REF_NAME" | grep -v "^\* Co-Authored-By"
+              # `|| true` because grep exits 1 when it filters out every line, and
+              # `set -o pipefail` would turn that into a failed release.
+              git log --pretty="* %s" "$previous..$GITHUB_REF_NAME" \
+                | grep -v "^\* Co-Authored-By" || true
             } >> notes.md
           fi
 
