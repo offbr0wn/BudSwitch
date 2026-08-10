@@ -64,7 +64,7 @@ make_dmg() {
 		     xattr -dr com.apple.quarantine /Applications/${APP_NAME}.app
 
 		   Why? ${APP_NAME} is free and unnotarized. Notarizing means
-		   paying Apple $99/year to scan the binary — hard to justify
+		   paying Apple \$99/year to scan the binary — hard to justify
 		   for a small free tool. The app IS code-signed and its
 		   signature verifies; it just is not registered with Apple.
 
