@@ -163,7 +163,15 @@ final class Hotkey {
 
     /// Registered instances, keyed by the id handed to Carbon. The C callback gets no
     /// context pointer worth trusting across re-registration, so it looks up here.
-    private static var instances: [UInt32: Hotkey] = [:]
+    ///
+    /// Held **weakly**: a strong reference here would keep every Hotkey alive forever,
+    /// so `deinit` would never run and each rebind would leak the object plus its
+    /// installed Carbon event handler.
+    private final class WeakBox {
+        weak var value: Hotkey?
+        init(_ value: Hotkey) { self.value = value }
+    }
+    private static var instances: [UInt32: WeakBox] = [:]
     private static var nextID: UInt32 = 1
 
     private var id: UInt32 = 0
@@ -181,7 +189,10 @@ final class Hotkey {
         let combo = Self.combo
         id = Self.nextID
         Self.nextID += 1
-        Self.instances[id] = self
+        // Drop boxes whose Hotkey has gone. Without this the registry grows by one entry
+        // per rebind — small, but unbounded over a long session.
+        Self.instances = Self.instances.filter { $0.value.value != nil }
+        Self.instances[id] = WeakBox(self)
 
         // One handler for hot-key presses. Installed per instance and torn down in stop(),
         // so repeated rebinding doesn't stack handlers.
@@ -202,7 +213,7 @@ final class Hotkey {
                 &pressedID
             )
             guard status == noErr,
-                  let hotkey = Hotkey.instances[pressedID.id]
+                  let hotkey = Hotkey.instances[pressedID.id]?.value
             else { return OSStatus(eventNotHandledErr) }
 
             Log.app.log("hotkey pressed")

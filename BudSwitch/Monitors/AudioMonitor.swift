@@ -32,10 +32,27 @@ final class AudioMonitor {
     }
 
     deinit {
-        // Capture what needs detaching; deinit can't safely hop queues.
-        for (device, block) in watched {
-            var addr = Self.runningAddress
-            AudioObjectRemovePropertyListenerBlock(device, &addr, queue, block)
+        // `watched` is mutated on `queue`, so reading it here would be a data race —
+        // and deinit cannot safely dispatch onto that queue to synchronise. Detach
+        // explicitly via stop() instead; this only covers the listener that is not
+        // keyed by device.
+        if let block = defaultDeviceListener {
+            var addr = Self.defaultOutputAddress
+            AudioObjectRemovePropertyListenerBlock(systemObject, &addr, queue, block)
+        }
+    }
+
+    /// Detaches every listener. Call before releasing the monitor.
+    func stop() {
+        queue.async { [weak self] in
+            guard let self else { return }
+            for (device, block) in self.watched {
+                var addr = Self.runningAddress
+                AudioObjectRemovePropertyListenerBlock(device, &addr, self.queue, block)
+            }
+            self.watched.removeAll()
+            self.pendingStart?.cancel()
+            self.pendingStop?.cancel()
         }
     }
 
@@ -51,13 +68,13 @@ final class AudioMonitor {
 
     // MARK: - Listeners
 
-    private static var runningAddress = AudioObjectPropertyAddress(
+    private static let runningAddress = AudioObjectPropertyAddress(
         mSelector: kAudioDevicePropertyDeviceIsRunningSomewhere,
         mScope: kAudioObjectPropertyScopeGlobal,
         mElement: kAudioObjectPropertyElementMain
     )
 
-    private static var defaultOutputAddress = AudioObjectPropertyAddress(
+    private static let defaultOutputAddress = AudioObjectPropertyAddress(
         mSelector: kAudioHardwarePropertyDefaultOutputDevice,
         mScope: kAudioObjectPropertyScopeGlobal,
         mElement: kAudioObjectPropertyElementMain
