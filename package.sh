@@ -63,10 +63,15 @@ make_dmg() {
 		   Or, in Terminal:
 		     xattr -dr com.apple.quarantine /Applications/${APP_NAME}.app
 
-		   (This appears because the app is not notarized by Apple —
-		   that requires a paid Apple Developer account. The app is
-		   signed and its signature verifies; it simply is not
-		   registered with Apple.)
+		   Why? ${APP_NAME} is free and unnotarized. Notarizing means
+		   paying Apple $99/year to scan the binary — hard to justify
+		   for a small free tool. The app IS code-signed and its
+		   signature verifies; it just is not registered with Apple.
+
+		   Every release is built by GitHub Actions from tagged source,
+		   never uploaded by hand, and each release page lists the
+		   SHA-256 of its DMG so you can check your download:
+		     https://github.com/offbr0wn/${APP_NAME}/releases
 
 		3. Allow Bluetooth when asked. Without it the app cannot do
 		   anything at all. It is the only permission needed —

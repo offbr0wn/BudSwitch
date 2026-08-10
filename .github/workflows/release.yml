@@ -100,6 +100,22 @@ jobs:
             } >> notes.md
           fi
 
+          # Checksum of the exact file being uploaded, so anyone can confirm their
+          # download matches what this run built. Computed here rather than locally —
+          # a locally-built DMG is byte-different and would be a misleading claim.
+          sum=$(shasum -a 256 "dist/BudSwitch-$version.dmg" | awk '{print $1}')
+          {
+            echo
+            echo "## Verify your download"
+            echo
+            echo 'Built by [GitHub Actions]('"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"') from this tag — not uploaded by hand.'
+            echo
+            echo '```'
+            echo "shasum -a 256 ~/Downloads/BudSwitch-$version.dmg"
+            echo "$sum"
+            echo '```'
+          } >> notes.md
+
           gh release create "$GITHUB_REF_NAME" "dist/BudSwitch-$version.dmg" \
             --title "BudSwitch $version" \
             --notes-file notes.md

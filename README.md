@@ -6,6 +6,8 @@
 
 **Your earbuds follow you between your Mac and your phone — automatically.**
 
+<sub>Free and open source · No account, no telemetry, no network access</sub>
+
 [![Download](https://img.shields.io/badge/Download-BudSwitch%201.0.1-5B4FDB?style=for-the-badge)](../../releases/latest)
 &nbsp;
 [![Build](https://github.com/offbr0wn/BudSwitch/actions/workflows/build.yml/badge.svg)](https://github.com/offbr0wn/BudSwitch/actions/workflows/build.yml)
@@ -57,9 +59,16 @@ and takes a much faster path when the device *does* support multipoint.
 > xattr -dr com.apple.quarantine /Applications/BudSwitch.app
 > ```
 >
-> Notarization needs a paid Apple Developer account. The app **is** code-signed and its
-> signature verifies — it just isn't registered with Apple. If you'd rather not take that
-> on trust, [build it yourself](#build-from-source); it takes one command.
+> **Why the warning?** BudSwitch is free and unnotarized. Notarization means paying Apple
+> $99/year to have them scan the binary — worth it for paid software, hard to justify for
+> a small free tool. The app **is** code-signed and its signature verifies; it simply
+> isn't registered with Apple.
+>
+> **Don't want to take that on trust?** You shouldn't have to. Every release is
+> [built by GitHub Actions](../../actions/workflows/release.yml) from the tagged source in
+> this repo — never uploaded by hand — and each release lists the SHA-256 of its own DMG so
+> you can check your download. Or [build it yourself](#build-from-source) in one command
+> and skip the warning entirely.
 
 Allow **Bluetooth** when asked. It's the only permission BudSwitch needs — the keyboard
 shortcut requires nothing extra.
