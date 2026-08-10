@@ -15,6 +15,10 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The notes step walks commits between tags; a shallow clone has neither.
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Check the tag matches Info.plist
         run: |
@@ -83,15 +87,15 @@ jobs:
           # instruction, or people conclude the app is broken. Then the commit list
           # since the previous tag.
           sed "s/__VERSION__/$version/g" .github/release-template.md > notes.md
-          previous=$(git tag --sort=-version:refname | grep -v "^$GITHUB_REF_NAME$" | head -1)
-          if [ -n "$previous" ]; then
+          # Best-effort changelog. Never let notes generation block a release whose
+          # DMG has already passed every verification step above.
+          previous=$(git tag --sort=-version:refname 2>/dev/null | grep -v "^$GITHUB_REF_NAME$" | head -1 || true)
+          if [ -n "$previous" ] && git rev-parse -q --verify "$previous" >/dev/null; then
             {
               echo
               echo "## Changes since $previous"
               echo
-              # `|| true` because grep exits 1 when it filters out every line, and
-              # `set -o pipefail` would turn that into a failed release.
-              git log --pretty="* %s" "$previous..$GITHUB_REF_NAME" \
+              git log --pretty="* %s" "$previous..$GITHUB_REF_NAME" 2>/dev/null \
                 | grep -v "^\* Co-Authored-By" || true
             } >> notes.md
           fi
