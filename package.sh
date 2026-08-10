@@ -47,13 +47,21 @@ make_dmg() {
 
 		1. Drag $APP_NAME onto the Applications folder shown here.
 
-		2. IMPORTANT — do not double-click it the first time.
-		   Open your Applications folder, RIGHT-CLICK $APP_NAME,
-		   choose Open, then click Open again in the dialog.
+		2. IMPORTANT — macOS will block the first launch.
+		   You will see "Apple could not verify BudSwitch is free of
+		   malware" with only Done and Move to Bin. Click DONE —
+		   do NOT move it to the bin.
 
-		   Double-clicking shows "Apple could not verify $APP_NAME is
-		   free of malware" with no way past it. Right-click > Open is
-		   what gives you the button to continue. You only do this once.
+		   On macOS 15 Sequoia and later:
+		     System Settings > Privacy & Security > scroll to the
+		     bottom > click "Open Anyway" next to the BudSwitch
+		     message, then confirm. Once per machine.
+
+		   On macOS 14 Sonoma:
+		     Right-click ${APP_NAME} in Applications > Open > Open.
+
+		   Or, in Terminal:
+		     xattr -dr com.apple.quarantine /Applications/${APP_NAME}.app
 
 		   (This appears because the app is not notarized by Apple —
 		   that requires a paid Apple Developer account. The app is

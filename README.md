@@ -6,7 +6,7 @@
 
 **Your earbuds follow you between your Mac and your phone — automatically.**
 
-[![Download](https://img.shields.io/badge/Download-BudSwitch%201.0.0-5B4FDB?style=for-the-badge)](../../releases/latest)
+[![Download](https://img.shields.io/badge/Download-BudSwitch%201.0.1-5B4FDB?style=for-the-badge)](../../releases/latest)
 &nbsp;
 [![Build](https://github.com/offbr0wn/BudSwitch/actions/workflows/build.yml/badge.svg)](https://github.com/offbr0wn/BudSwitch/actions/workflows/build.yml)
 &nbsp;
@@ -38,16 +38,28 @@ and takes a much faster path when the device *does* support multipoint.
 
 1. **[Download the latest release](../../releases/latest)** and open the `.dmg`.
 2. Drag **BudSwitch** onto **Applications**.
-3. **Right-click** the app in Applications → **Open** → **Open**.
+3. Open it. macOS will block the first launch — see below.
 
 > [!IMPORTANT]
-> Step 3 is not optional. Double-clicking shows *"Apple could not verify BudSwitch is free
-> of malware"* with no way past it. Right-click → Open gives you the button to continue.
-> Once per machine.
+> **macOS will refuse to open BudSwitch the first time.** It isn't notarized, so you get
+> *"Apple could not verify BudSwitch is free of malware"* with only **Done** and
+> **Move to Bin**. Click **Done** — do not move it to the bin.
 >
-> The app isn't notarized — that needs a paid Apple Developer account. It **is**
-> code-signed and its signature verifies; it simply isn't registered with Apple. Build it
-> yourself from source if you'd rather not take that on trust.
+> **On macOS 15 Sequoia and later**, open **System Settings → Privacy & Security**, scroll
+> to the bottom, and click **Open Anyway** next to the BudSwitch message. Confirm, and it
+> launches. Once per machine.
+>
+> **On macOS 14 Sonoma**, right-click the app in Applications → **Open** → **Open**.
+>
+> Prefer one command? This does the same thing:
+>
+> ```bash
+> xattr -dr com.apple.quarantine /Applications/BudSwitch.app
+> ```
+>
+> Notarization needs a paid Apple Developer account. The app **is** code-signed and its
+> signature verifies — it just isn't registered with Apple. If you'd rather not take that
+> on trust, [build it yourself](#build-from-source); it takes one command.
 
 Allow **Bluetooth** when asked. It's the only permission BudSwitch needs — the keyboard
 shortcut requires nothing extra.
