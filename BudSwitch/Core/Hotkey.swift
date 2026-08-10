@@ -152,11 +152,6 @@ final class Hotkey {
         set { UserDefaults.standard.set(newValue, forKey: "hotkeyEnabled") }
     }
 
-    /// Always true: `RegisterEventHotKey` needs no permission at all.
-    ///
-    /// Kept so callers don't have to care which mechanism is in use.
-    static var hasPermission: Bool { true }
-
     private var hotKeyRef: EventHotKeyRef?
     private var handlerRef: EventHandlerRef?
     private let action: () -> Void

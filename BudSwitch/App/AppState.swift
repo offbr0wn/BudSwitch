@@ -279,6 +279,10 @@ final class AppState: ObservableObject {
 
     deinit {
         pollTimer?.invalidate()
+        // AudioMonitor holds CoreAudio listener blocks that outlive the object unless
+        // detached explicitly; without this its stop() was dead code.
+        audioMonitor?.stop()
+        hotkey?.stop()
     }
 
     // MARK: - Device selection
@@ -287,8 +291,22 @@ final class AppState: ObservableObject {
         pairedDevices = BluetoothController.pairedDevices()
         Log.app.log("found \(self.pairedDevices.count, privacy: .public) paired devices")
 
-        // First run: default to a device that is currently the audio route, so the app is
-        // useful immediately without making the user open the picker.
+        // Drop a selection whose device has been unpaired behind our back. Without this
+        // the picker keeps showing a device that no longer exists and every switch fails
+        // with kIOReturnNoDevice and no explanation.
+        if let address = selectedAddress,
+           !pairedDevices.contains(where: { $0.address == address }) {
+            Log.app.log("selected device \(address, privacy: .public) is no longer paired — clearing")
+            DeviceStore.address = nil
+            DeviceStore.name = nil
+            selectedAddress = nil
+            selectedName = nil
+            note("device was unpaired — pick another")
+        }
+
+        // Default to a device that is currently the audio route, so the app is useful
+        // immediately without making the user open the picker. Also re-runs after the
+        // clear above, so unpairing one device falls through to a sensible replacement.
         if selectedAddress == nil,
            let routed = pairedDevices.first(where: {
                AudioRouteProbe.isRoutedToDevice(address: $0.address)
