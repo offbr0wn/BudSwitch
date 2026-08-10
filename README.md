@@ -1,76 +1,110 @@
+<div align="center">
+
+<img src="docs/images/icon.png" width="128" alt="BudSwitch icon">
+
 # BudSwitch
 
-A macOS menubar app that moves your Bluetooth earbuds between your Mac and your phone —
-automatically, in about a second.
+**Your earbuds follow you between your Mac and your phone — automatically.**
 
-Most earbuds can only hold one connection at a time. Switching means opening Bluetooth
-settings on one device, disconnecting, then reconnecting on the other. BudSwitch does it
-for you: start playing something on your Mac and the buds come to you; walk away and they
-go back to your phone.
+[![Download](https://img.shields.io/badge/Download-BudSwitch%201.0.0-5B4FDB?style=for-the-badge)](../../releases/latest)
+&nbsp;
+![macOS 14+](https://img.shields.io/badge/macOS-14%2B-333?style=for-the-badge)
+&nbsp;
+![Universal](https://img.shields.io/badge/Universal-Apple%20Silicon%20%2B%20Intel-333?style=for-the-badge)
+
+</div>
+
+---
+
+Most earbuds hold one connection at a time. Switching from your phone to your Mac means
+digging into Bluetooth settings, disconnecting, reconnecting — every single time.
+
+BudSwitch does it for you. Press play on your Mac and your buds come to you. Walk away,
+and they go back to your phone.
+
+<div align="center">
+<img src="docs/images/panel-mac.png" width="300" alt="BudSwitch panel with buds connected to the Mac">
+</div>
 
 Built for **Samsung Galaxy Buds4 Pro**, which have no true multipoint for non-Samsung
-devices and whose Auto Switch is Galaxy-only. It works with any paired Bluetooth audio
-device, and takes a much faster path when the device *does* support multipoint.
+devices and whose Auto Switch is Galaxy-only. Works with any paired Bluetooth audio device,
+and takes a much faster path when the device *does* support multipoint.
 
 ---
 
 ## Install
 
-1. Download the `.dmg` from [Releases](../../releases).
+1. **[Download the latest release](../../releases/latest)** and open the `.dmg`.
 2. Drag **BudSwitch** onto **Applications**.
 3. **Right-click** the app in Applications → **Open** → **Open**.
 
-> Step 3 matters. Double-clicking shows *"Apple could not verify BudSwitch is free of
-> malware"* with no way past it. Right-click → Open gives you the button to continue. You
-> only do this once.
+> [!IMPORTANT]
+> Step 3 is not optional. Double-clicking shows *"Apple could not verify BudSwitch is free
+> of malware"* with no way past it. Right-click → Open gives you the button to continue.
+> Once per machine.
 >
-> This is because the app isn't notarized — that requires a paid Apple Developer account.
-> The app is code-signed and its signature verifies; it simply isn't registered with Apple.
+> The app isn't notarized — that needs a paid Apple Developer account. It **is**
+> code-signed and its signature verifies; it simply isn't registered with Apple. Build it
+> yourself from source if you'd rather not take that on trust.
 
-Allow **Bluetooth** when asked. It's the only permission needed — the keyboard shortcut
-requires nothing extra.
+Allow **Bluetooth** when asked. It's the only permission BudSwitch needs — the keyboard
+shortcut requires nothing extra.
 
-Then look for the headphones icon in your menubar. There's no Dock icon and no window;
+Then look for the headphones icon in your menubar. There's no Dock icon and no window —
 that icon is the whole app.
 
-**Requirements:** macOS 14 (Sonoma) or later. Universal — Apple Silicon and Intel. Your
-earbuds must already be paired in System Settings → Bluetooth; BudSwitch switches between
-devices you've paired, it doesn't pair them.
+**Requirements:** macOS 14 (Sonoma) or later. Your earbuds must already be paired in
+System Settings → Bluetooth; BudSwitch switches between devices you've paired, it doesn't
+pair them for you.
 
 ---
 
 ## What it does
 
 | Trigger | Action |
-|---|---|
+| :-- | :-- |
 | Audio starts from an allowlisted app | Buds connect to the Mac |
 | Mac idle 5 minutes, nothing playing | Buds released — your phone can take them |
 | Mac sleeps or locks | Buds released immediately |
-| **⌃⌥⌘B** from anywhere | Toggle, always wins |
+| <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌘</kbd><kbd>B</kbd> from anywhere | Toggle, always wins |
 
-The menubar icon is filled when the buds are on your Mac, dimmed when they're not.
+<table>
+<tr>
+<td width="50%" align="center">
+<img src="docs/images/panel-phone.png" width="290" alt="Buds on the phone">
+<br><em>Buds are on your phone</em>
+</td>
+<td width="50%" align="center">
+<img src="docs/images/panel-multipoint.png" width="290" alt="Multipoint device connected to both">
+<br><em>Multipoint — connected to both, switches in milliseconds</em>
+</td>
+</tr>
+</table>
 
-### Guards
+The route line shows which side holds your buds. The menubar icon is filled when they're
+on your Mac, dimmed when they're not.
 
-These exist because the naive version of each one was wrong:
+### It won't take your buds at the wrong moment
+
+Each of these exists because the naive version got it wrong:
 
 - **Never releases while audio is playing.** Idle is measured from keyboard and mouse
   input — and watching a film is exactly when you touch neither. Playing audio counts as
-  activity, so the buds stay put, and the timer re-arms so they still go to your phone
+  activity, so your buds stay put, and the timer re-arms so they still go to your phone
   once playback actually ends.
 - **Never releases during a call.** Detected via a live audio *input*, since dropping the
   link takes your microphone with it.
 - **Pausing doesn't release.** Only idle, sleep and lock do.
-- **Sustained audio only.** Playback must run for 2 seconds continuously, so notification
-  chimes and UI sounds don't yank your buds off your phone.
+- **Sustained audio only.** Playback must run 2 seconds continuously, so a notification
+  chime can't yank your buds off your phone.
 - **10-second cooldown** after every switch, so triggers can't fight each other.
 
 ---
 
-## Configuration
+## Settings
 
-Most of it is in the menubar panel: the device picker, "Switch automatically", the global
-shortcut (click it and press new keys), and an on/off toggle for each.
+Most of it lives in the panel: device picker, "Switch automatically", and the global
+shortcut — click it and press new keys.
 
 The rest is `defaults`, applied on next launch:
 
@@ -79,12 +113,12 @@ defaults write com.budswitch.mac idleMinutes -int 15
 ```
 
 | Key | Default | What it does |
-|---|---|---|
+| :-- | :-- | :-- |
 | `idleMinutes` | `5` | Minutes idle before releasing (1–30) |
-| `allowlist` | see below | Bundle IDs allowed to trigger a connect |
+| `allowlist` | *see below* | Bundle IDs allowed to trigger a connect |
 | `allowlistEnabled` | `true` | `false` lets *any* audio trigger a connect |
 | `automationEnabled` | `true` | Master switch for all automatic triggers |
-| `showHUD` | `true` | The overlay shown when you press the shortcut |
+| `showHUD` | `true` | Overlay shown when you press the shortcut |
 | `menubarSymbol` | `headphones` | Any SF Symbol name |
 | `hotkeyEnabled` | `true` | Global shortcut on/off |
 
@@ -96,25 +130,24 @@ defaults write com.budswitch.mac allowlist -array com.brave.Browser com.spotify.
 
 ---
 
-## Building
+## Build from source
 
 ```bash
-./build.sh                  # → build/BudSwitch.app
-./package.sh dmg            # → dist/BudSwitch-<version>.dmg
+git clone https://github.com/offbr0wn/BudSwitch.git
+cd BudSwitch
+./build.sh && open build/BudSwitch.app
 ```
 
-`build.sh` compiles a universal binary with `swiftc` directly — no Xcode project. If
-`xcodebuild` complains about the developer directory:
+No Xcode project — `build.sh` drives `swiftc` directly and produces a universal binary.
+`./package.sh dmg` builds the installer.
 
-```bash
-sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-```
+> [!NOTE]
+> Always launch via `open`, never by running the binary directly. A bare executable is
+> killed by macOS on its first IOBluetooth call regardless of signing; only a `.app`
+> launched through LaunchServices gets Bluetooth access.
 
-**Always launch via `open`, not by running the binary.** A bare executable is killed by
-TCC on its first IOBluetooth call, regardless of signing. Only a `.app` launched through
-LaunchServices gets Bluetooth access.
-
-### Layout
+<details>
+<summary><strong>Project layout</strong></summary>
 
 ```
 BudSwitch/
@@ -127,26 +160,29 @@ BudSwitch/
 Resources/     Info.plist, AppIcon.icns, makeicon.swift
 ```
 
-### Logs
-
-Every state transition is logged. Use `log stream`, not `log show` — the log store lags by
-minutes and will make you think things are broken when they aren't:
+Every state transition is logged. Use `log stream` — `log show` lags by minutes and will
+convince you things are broken when they aren't:
 
 ```bash
 log stream --predicate 'subsystem == "com.budswitch.mac"' --level debug
 ```
 
+</details>
+
 ---
 
 ## How it works
 
-Three decisions carry most of the design.
+<details open>
+<summary><strong>Three decisions carry the design</strong></summary>
+
+<br>
 
 **Connection state comes from CoreAudio, not IOBluetooth.** `openConnection()` creates a
 *baseband* link — a successful return doesn't mean audio routes to the Mac — and
 `isConnected()` is cached and goes stale. CoreAudio device UIDs embed the Bluetooth MAC
 (`AA-BB-CC-DD-EE-FF:output`), so matching the default output UID against the device address
-gives a trustworthy signal. It needs no entitlement and triggers no permission prompt.
+gives a trustworthy signal. No entitlement, no permission prompt.
 
 **Multipoint devices take a shortcut.** If the buds already hold an audio link to this Mac,
 there's nothing to negotiate — switching is just moving the system output. That's **~6ms**,
@@ -154,30 +190,49 @@ versus 1.8–6.8s through Bluetooth. Detection is free: a device only appears in
 output list while it holds a link, so "present but not the default output" *is* the
 multipoint signal.
 
-**Non-multipoint devices get retries.** A real Bluetooth negotiation, 3 attempts with
+**Non-multipoint devices get retries.** A real Bluetooth negotiation — 3 attempts with
 0.5s/1s backoff, judged by whether audio actually arrived. Measured connects have ranged
-1.8s to 6.8s on the same hardware, so a single attempt isn't enough.
+1.8s to 6.8s on identical hardware, so one attempt isn't enough.
 
-### Gotchas worth knowing
+</details>
+
+<details>
+<summary><strong>Gotchas found the hard way</strong></summary>
+
+<br>
 
 - `IOBluetoothDevice(addressString:)` can block **indefinitely** when the device is
   unreachable — not just slowly. Constructed once per address and cached, off the hot path.
 - Virtual audio devices (Background Music, Teams) can become the default output and mask
-  real hardware. They're excluded from playback detection and flagged in the UI.
+  real hardware. Excluded from playback detection and flagged in the UI.
 - The global shortcut uses `RegisterEventHotKey`, not `NSEvent.addGlobalMonitorForEvents`.
   The latter asks for the entire system keystroke stream and is gated behind Accessibility;
   the former registers one combination and needs no permission at all.
+- A bare CLI binary cannot touch IOBluetooth. It aborts on the *first* call, before your
+  code runs — embedding the usage description and code-signing are both insufficient.
+
+</details>
 
 ---
 
 ## Status
 
-Working and in daily use. The remaining open question is the **phone → Mac steal**: whether
-`openConnection()` can take the link from a phone that currently holds non-multipoint buds.
-It can't be tested with a multipoint headset — those simply hold both links, which is the
-opposite situation. See [docs/spike-results.md](docs/spike-results.md).
+Working and in daily use.
+
+One open question remains: the **phone → Mac steal** — whether `openConnection()` can take
+the link from a phone that currently holds non-multipoint buds. It can't be tested with a
+multipoint headset, since those simply hold both links, which is the opposite situation.
+Full write-up in [docs/spike-results.md](docs/spike-results.md).
 
 The Mac → phone direction is solid and independent of that answer.
 
-Not built yet: launch at login (`SMAppService`), a log viewer in settings, and the optional
-Android companion that would release from the phone side.
+**Not built yet:** launch at login (`SMAppService`), a log viewer in settings, and an
+optional Android companion to release from the phone side.
+
+Issues and pull requests welcome.
+
+---
+
+<div align="center">
+<sub>MIT licensed · Built with Swift and SwiftUI</sub>
+</div>

@@ -255,7 +255,7 @@ final class AppState: ObservableObject {
     /// Builds a state with fixed values and no polling, for previews and UI snapshots.
     init(
         previewRouted: Bool,
-        outputName: String = "Nothing Ear",
+        outputName: String = "Earbuds",
         outputIsVirtual: Bool = false,
         devices: [BluetoothController.PairedDevice] = [],
         history: [SpikeRecord] = [],
@@ -263,6 +263,7 @@ final class AppState: ObservableObject {
         liveAddress: String? = nil,
         linkedButIdle: Bool = false
     ) {
+        self.isPreview = true
         self.previewLiveAddress = liveAddress ?? (previewRouted ? devices.first?.address : "")
         self.isRouted = previewRouted
         self.isLinkedButIdle = linkedButIdle
@@ -318,6 +319,10 @@ final class AppState: ObservableObject {
     }
 
     func refreshRoute() {
+        // Previews carry fixed state; re-reading the real hardware here would overwrite it
+        // the moment the view appears.
+        guard !isPreview else { return }
+
         let output = AudioRouteProbe.defaultOutputDevice()
         currentOutputName = output?.name ?? "—"
         outputIsVirtual = output?.isVirtual ?? false
@@ -365,6 +370,10 @@ final class AppState: ObservableObject {
 
     /// Non-nil only in previews.
     private var previewLiveAddress: String?
+
+    /// True for states built by the preview initializer, which must not be overwritten
+    /// by live hardware reads.
+    private var isPreview = false
 
     // MARK: - Actions
 
