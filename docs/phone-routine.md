@@ -56,6 +56,13 @@ TikTok, Spotify.
 This fires whenever audio actually starts, no matter which app — which is the point, since
 you are usually already inside Instagram or YouTube when a video plays, not opening it.
 
+> [!NOTE]
+> **The media trigger may only fire for some apps.** In testing it caught YouTube but not
+> Instagram or Twitter, even with "All apps" selected and sound coming out of the speaker.
+> Android apps can play inline video on a stream the "media is playing" condition does not
+> count, and social apps often do. If that is your experience, combine it with the
+> app-based trigger below — add both, in one routine or two.
+
 > [!IMPORTANT]
 > **Step 4 is not optional.** "Media is playing" is a *condition*, not a one-off trigger.
 > Modes and Routines keeps a routine active only while its condition holds, and by default
