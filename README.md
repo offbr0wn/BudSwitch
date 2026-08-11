@@ -107,6 +107,17 @@ pair them for you.
 The route line shows which side holds your buds. The menubar icon is filled when they're
 on your Mac, dimmed when they're not.
 
+> [!NOTE]
+> **"Send to phone" releases the buds — it can't make your phone grab them.**
+> BudSwitch drops the Bluetooth link so the buds are free, but connecting has to be
+> initiated from the phone. On most earbuds without multipoint (including the Galaxy
+> Buds4 Pro) they will sit idle until something connects.
+>
+> In practice: **start playing something on your phone** and it connects to them straight
+> away. If you'd rather it were automatic, a Bluetooth routine on the phone — Samsung
+> Modes and Routines, or Tasker on Android — can connect to the buds on an event. Nothing
+> on the Mac side can do this part; see [docs/spike-results.md](docs/spike-results.md).
+
 ### It won't take your buds at the wrong moment
 
 Each of these exists because the naive version got it wrong:

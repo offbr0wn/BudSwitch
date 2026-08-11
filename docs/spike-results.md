@@ -8,8 +8,17 @@ model-agnostic.
 
 ## Headline
 
-Connect and disconnect both work reliably from the GUI. **The phone→Mac steal remains
-untested** — and cannot be tested with the current stand-in device.
+Connect and disconnect both work reliably from the GUI.
+
+**Update 2026-08-11 — answered with real Buds4 Pro.** The Mac *can* take the buds: a
+connect while the buds were idle succeeded and the route followed in 1.7s. What the Mac
+**cannot** do is hand them back — releasing drops the link and the buds sit idle until
+something connects to them. A Samsung phone does not claim them on its own, so the
+phone→Mac direction is complete but Mac→phone requires a manual reconnect on the phone.
+That is the gap the Android companion was always meant to fill. See "The remaining gap"
+at the end.
+
+The original caveat, written while only a multipoint stand-in was available:
 
 > **The stand-in cannot answer the spike question.** The Nothing Ear supports
 > **multipoint**. When the Mac connects while the phone is playing, the buds simply hold
@@ -147,3 +156,35 @@ Three possible outcomes:
 
 Until then, treat the phone→Mac direction as **unproven**. The Mac→phone release direction
 is solid and independent of this result.
+
+
+---
+
+## The remaining gap (2026-08-11)
+
+Tested with real **Galaxy Buds4 Pro** (paired to a Samsung Galaxy phone and this Mac).
+
+| Direction | Works? | Detail |
+|---|---|---|
+| Buds → Mac | **Yes** | Connect succeeded, route followed in 1.7s |
+| Mac → buds released | **Yes** | `closeConnection()` in 0.22s, link drops cleanly |
+| Buds → phone | **No** | Buds sit idle; the phone does not claim them |
+
+**Why.** BudSwitch can only *release* the buds. It has no way to make the phone connect —
+that has to be initiated from the phone side. The Buds4 Pro have no multipoint for
+non-Samsung devices, and Samsung Auto Switch is Galaxy-only, so nothing on the phone is
+watching for the buds to become free.
+
+**What would fix it,** roughly in order of effort:
+
+1. **Play something on the phone.** Starting audio makes Android connect to its last
+   device. Zero code, but it is a manual step.
+2. **A Bluetooth routine on the phone.** Samsung Modes and Routines (or Tasker) can
+   trigger "connect to Buds4 Pro" on an event — e.g. when the buds disconnect, or on a
+   schedule. Still no code, and closer to automatic.
+3. **The Android companion.** A small app watching for the buds to become available and
+   connecting via `BluetoothAdapter`. This is what the original spec anticipated, and it
+   is the only route to genuinely seamless.
+
+Nothing on the Mac side can close this gap — worth stating plainly so it is not mistaken
+for a BudSwitch bug.

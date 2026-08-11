@@ -26,5 +26,10 @@
 
 Allow **Bluetooth** when asked — it's the only permission BudSwitch needs.
 
+> [!NOTE]
+> **"Send to phone" releases the buds; it can't make your phone grab them.** Connecting has
+> to be initiated from the phone, so on earbuds without multipoint they sit idle until
+> something connects. Start playing audio on your phone and it picks them up straight away.
+
 **Requirements:** macOS 14 (Sonoma) or later. Universal — Apple Silicon and Intel. Your
 earbuds must already be paired in System Settings → Bluetooth.
