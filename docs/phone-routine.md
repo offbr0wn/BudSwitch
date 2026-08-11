@@ -4,8 +4,11 @@ BudSwitch releases the buds; it can't make your phone connect to them — that h
 from the phone. On a Samsung Galaxy, **Modes and Routines** can close that gap without
 any code.
 
-Pick **one** of the routines below. Start with the first: it's the simplest and covers
-the common case.
+Pick **one** of the routines below.
+
+- **Mostly want the buds when audio starts** (YouTube, Instagram, Spotify)? → **Routine 2**.
+- **Want them back whenever you pick the phone up?** → **Routine 1**.
+- **Want it as close to automatic as possible?** → **Routine 3**, and read its warning.
 
 ---
 
@@ -35,18 +38,35 @@ Best default. You pick your phone up, the buds are back. Nothing to remember.
 
 ---
 
-## Routine 2 — reconnect when you open a music app
+## Routine 2 — reconnect when you play audio *(recommended)*
 
-Fires exactly when you want audio, and never otherwise.
+Best fit if you mostly want the buds when a video or track starts — YouTube, Instagram,
+TikTok, Spotify.
+
+**The good version — trigger on the audio itself:**
 
 1. **Modes and Routines → Routines** → **+**
-2. **If** → **App** → **App opened** → pick **Spotify** (add YouTube Music, Podcasts etc.
-   if you use them)
+2. **If** → **Sound and vibration** → **Media is playing** *(some builds call this
+   "Media sound started" or list it under **Media**)*
 3. **Then** → **Connect Bluetooth device** → **your Buds4 Pro**
 4. Save.
 
-This one has the fewest false positives. If a routine ever grabs the buds at the wrong
-moment, switch to this.
+This fires whenever audio actually starts, no matter which app — which is the point, since
+you are usually already inside Instagram or YouTube when a video plays, not opening it.
+
+**If your build has no "media is playing" trigger,** fall back to app-based:
+
+1. **If** → **App** → **App opened** → add **YouTube**, **Instagram**, **TikTok**,
+   **Spotify** — as many as you use
+2. **Then** → **Connect Bluetooth device** → **your Buds4 Pro**
+
+The fallback has a real gap: it only fires when you *launch* the app. Scroll into a video
+in an app that was already open and nothing happens. Prefer the media trigger if you have
+it.
+
+> Instagram and YouTube autoplay muted video constantly. If the routine fires more than
+> you want, add a condition under **If** — **Time** (only during the hours you use the
+> buds), or **Place → Not at work**.
 
 ---
 
