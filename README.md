@@ -8,7 +8,7 @@
 
 <sub>Free and open source · No account, no telemetry, no network access</sub>
 
-[![Download](https://img.shields.io/badge/Download-BudSwitch%201.0.1-5B4FDB?style=for-the-badge)](../../releases/latest)
+[![Download](https://img.shields.io/github/v/release/offbr0wn/BudSwitch?label=Download&color=5B4FDB&style=for-the-badge)](../../releases/latest)
 &nbsp;
 [![Build](https://github.com/offbr0wn/BudSwitch/actions/workflows/build.yml/badge.svg)](https://github.com/offbr0wn/BudSwitch/actions/workflows/build.yml)
 &nbsp;
