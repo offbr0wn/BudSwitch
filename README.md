@@ -23,8 +23,9 @@
 Most earbuds hold one connection at a time. Switching from your phone to your Mac means
 digging into Bluetooth settings, disconnecting, reconnecting — every single time.
 
-BudSwitch does it for you. Press play on your Mac and your buds come to you. Walk away,
-and they go back to your phone.
+BudSwitch does it for you. Press play on your Mac and your buds come to you. Walk away and
+it frees them, so your phone can take them back — [one routine on the
+phone](#make-it-work-both-ways) makes that automatic too.
 
 <div align="center">
 <img src="docs/images/panel-mac.png" width="300" alt="BudSwitch panel with buds connected to the Mac">
@@ -108,19 +109,45 @@ The route line shows which side holds your buds. The menubar icon is filled when
 on your Mac, dimmed when they're not.
 
 > [!NOTE]
-> **"Send to phone" releases the buds — it can't make your phone grab them.**
-> BudSwitch drops the Bluetooth link so the buds are free, but connecting has to be
-> initiated from the phone. On most earbuds without multipoint (including the Galaxy
-> Buds4 Pro) they will sit idle until something connects.
->
-> In practice: **start playing something on your phone** and it connects to them straight
-> away. To automate even that, see
-> **[docs/phone-routine.md](docs/phone-routine.md)** — three ready-made Samsung Modes and
-> Routines recipes (and a Tasker fallback) that reconnect the buds on unlock, on opening a
-> music app, or when they go idle.
->
-> Nothing on the Mac side can do this part; see
-> [docs/spike-results.md](docs/spike-results.md) for why.
+> **"Send to phone" releases the buds — it can't make your phone grab them.** Connecting
+> has to be initiated from the phone. Playing something on your phone picks them up
+> straight away; the section below automates even that.
+
+---
+
+## Make it work both ways
+
+BudSwitch handles **phone → Mac**. For **Mac → phone**, the phone has to do the
+connecting — nothing on the Mac can force it
+([why](docs/spike-results.md)). Add one routine on your phone and the pair behaves like
+real multipoint.
+
+**On a Samsung Galaxy** (Settings → Modes and Routines → Routines → **+**):
+
+| | |
+| :-- | :-- |
+| **If** | Sound and vibration → **Media is playing** |
+| **Then** | **Connect Bluetooth device** → your earbuds |
+| **When this routine ends** | **Do nothing** |
+
+That last row is the one people miss. "Media is playing" is a *condition*, not a one-off
+trigger — Modes and Routines reverses a routine's actions when its condition stops
+holding, so without it **your buds disconnect the moment you pause a video**.
+
+> [!TIP]
+> The media trigger doesn't fire for every app. In testing it caught YouTube and Spotify
+> but not Instagram or Twitter, which play inline video on a stream Android doesn't count
+> as media. If you use those, add a second routine: **If** → App → **App opened** →
+> Instagram, X, TikTok.
+
+Full walkthrough, plus recipes that trigger on unlock or on the buds going idle, and a
+Tasker fallback for phones without a "connect to device" action:
+**[docs/phone-routine.md](docs/phone-routine.md)**.
+
+**On other phones** there's no equivalent built in — Tasker (Android) can do it, and iOS
+Shortcuts cannot connect Bluetooth devices at all.
+
+---
 
 ### It won't take your buds at the wrong moment
 
