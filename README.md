@@ -114,9 +114,13 @@ on your Mac, dimmed when they're not.
 > Buds4 Pro) they will sit idle until something connects.
 >
 > In practice: **start playing something on your phone** and it connects to them straight
-> away. If you'd rather it were automatic, a Bluetooth routine on the phone — Samsung
-> Modes and Routines, or Tasker on Android — can connect to the buds on an event. Nothing
-> on the Mac side can do this part; see [docs/spike-results.md](docs/spike-results.md).
+> away. To automate even that, see
+> **[docs/phone-routine.md](docs/phone-routine.md)** — three ready-made Samsung Modes and
+> Routines recipes (and a Tasker fallback) that reconnect the buds on unlock, on opening a
+> music app, or when they go idle.
+>
+> Nothing on the Mac side can do this part; see
+> [docs/spike-results.md](docs/spike-results.md) for why.
 
 ### It won't take your buds at the wrong moment
 
