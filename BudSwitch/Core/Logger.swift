@@ -43,6 +43,7 @@ struct SpikeRecord: Identifiable, Equatable {
             case .routeOnly: return "instant (link was up)"
             case .alreadyThere: return "already there"
             case .basebandOnly: return "baseband only (no audio)"
+            case .failed(kIOReturnTimeout): return "buds didn't respond"
             case .failed(let code): return "failed (\(IOReturnName.describe(code)))"
             case .timedOut: return "timed out"
             }

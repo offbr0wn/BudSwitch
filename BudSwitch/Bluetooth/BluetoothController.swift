@@ -188,6 +188,15 @@ enum BluetoothController {
 
                 // An already-open link reports as an error; that's still a win.
                 if rawResult == kIOReturnSuccess { break }
+
+                // A timeout means the buds did not answer the page — they are out of
+                // range, in the case, or held by another device. Retrying cannot change
+                // any of those, and each attempt blocks ~15s despite the page timeout we
+                // ask for, so three of them cost 47s to reach the same answer.
+                if rawResult == kIOReturnTimeout {
+                    Log.bluetooth.log("\(action.rawValue, privacy: .public) timed out — buds unreachable, not retrying")
+                    break
+                }
                 if expectRouted, IOReturnName.alreadyConnected.contains(rawResult) { break }
                 // The desired state may have been reached even when the call reports
                 // failure. Connecting is judged by audio arriving; releasing by the link
