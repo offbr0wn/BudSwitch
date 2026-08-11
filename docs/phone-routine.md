@@ -49,10 +49,22 @@ TikTok, Spotify.
 2. **If** → **Sound and vibration** → **Media is playing** *(some builds call this
    "Media sound started" or list it under **Media**)*
 3. **Then** → **Connect Bluetooth device** → **your Buds4 Pro**
-4. Save.
+4. **Scroll to the bottom and set "When this routine ends" to "Do nothing"**
+   *(may be called "If conditions are not met" or "Don't reverse actions")*
+5. Save.
 
 This fires whenever audio actually starts, no matter which app — which is the point, since
 you are usually already inside Instagram or YouTube when a video plays, not opening it.
+
+> [!IMPORTANT]
+> **Step 4 is not optional.** "Media is playing" is a *condition*, not a one-off trigger.
+> Modes and Routines keeps a routine active only while its condition holds, and by default
+> **reverses every action when it ends** — so the moment you pause the video, it undoes the
+> connect and your buds disconnect.
+>
+> Setting the end behaviour to *do nothing* leaves the buds where they are when the media
+> stops. If your build has no such setting, use the app-based fallback below: it fires
+> once and has nothing to reverse.
 
 **If your build has no "media is playing" trigger,** fall back to app-based:
 
