@@ -117,35 +117,126 @@ on your Mac, dimmed when they're not.
 
 ## Make it work both ways
 
-BudSwitch handles **phone → Mac**. For **Mac → phone**, the phone has to do the
-connecting — nothing on the Mac can force it
-([why](docs/spike-results.md)). Add one routine on your phone and the pair behaves like
-real multipoint.
+BudSwitch handles **phone → Mac** on its own. For **Mac → phone**, the phone has to do the
+connecting — nothing on the Mac can force it ([why](docs/spike-results.md)).
 
-**On a Samsung Galaxy** (Settings → Modes and Routines → Routines → **+**):
+Set up one automation on your phone and the pair behaves like real multipoint. Pick your
+phone below.
 
-| | |
-| :-- | :-- |
-| **If** | Sound and vibration → **Media is playing** |
-| **Then** | **Connect Bluetooth device** → your earbuds |
-| **When this routine ends** | **Do nothing** |
+<details open>
+<summary><strong>Samsung Galaxy</strong> — built in, no extra app</summary>
 
-That last row is the one people miss. "Media is playing" is a *condition*, not a one-off
-trigger — Modes and Routines reverses a routine's actions when its condition stops
-holding, so without it **your buds disconnect the moment you pause a video**.
+<br>
+
+Uses **Modes and Routines**, which ships with One UI.
+
+**1.** Open **Settings** → **Modes and Routines**
+
+**2.** Tap the **Routines** tab at the top
+
+**3.** Tap **+** (top right)
+
+**4.** Tap **If**
+
+**5.** In the search box type `media`, then tap **Media is playing**
+*(may be listed under **Sound and vibration**, or called "Media sound started")*
+
+**6.** If it asks which apps, choose **All apps** → **Done**
+
+**7.** Tap **Then**
+
+**8.** Search `bluetooth` → tap **Connect Bluetooth device**
+
+**9.** Pick your earbuds → **Done**
+
+**10.** Scroll to the bottom → **When this routine ends** → choose **Do nothing**
+
+**11.** Tap **Save**, give it a name, **Done**
+
+> [!IMPORTANT]
+> **Step 10 is the one people miss.** "Media is playing" is a *condition*, not a one-off
+> trigger. Modes and Routines undoes a routine's actions when its condition stops holding
+> — so without this step **your earbuds disconnect the moment you pause a video**.
 
 > [!TIP]
-> The media trigger doesn't fire for every app. In testing it caught YouTube and Spotify
-> but not Instagram or Twitter, which play inline video on a stream Android doesn't count
-> as media. If you use those, add a second routine: **If** → App → **App opened** →
-> Instagram, X, TikTok.
+> **The media trigger doesn't catch every app.** In testing it fired for YouTube and
+> Spotify but not Instagram or Twitter, which play inline video on a stream Android
+> doesn't count as media.
+>
+> If you use those, add a **second** routine: **If** → **App** → **App opened** → tick
+> Instagram, X, TikTok. **Then** → **Connect Bluetooth device** → your earbuds. Note it
+> fires when you *open* the app, not when a video plays.
 
-Full walkthrough, plus recipes that trigger on unlock or on the buds going idle, and a
-Tasker fallback for phones without a "connect to device" action:
-**[docs/phone-routine.md](docs/phone-routine.md)**.
+</details>
 
-**On other phones** there's no equivalent built in — Tasker (Android) can do it, and iOS
-Shortcuts cannot connect Bluetooth devices at all.
+<details>
+<summary><strong>Other Android</strong> — needs Tasker (paid, ~£3)</summary>
+
+<br>
+
+Android has no built-in equivalent. [Tasker](https://tasker.joaoapps.com/) is the reliable
+option and does the same job.
+
+**1.** Install **Tasker** from the Play Store and grant the permissions it asks for
+
+**2.** Find your earbuds' MAC address — **Settings → Connected devices → (gear icon next
+to your earbuds)**, or run this on the Mac while they're connected:
+
+```bash
+system_profiler SPBluetoothDataType | grep -A2 "your earbuds"
+```
+
+**3.** In Tasker, open the **Profiles** tab → **+** → **Event** → **Display** →
+**Display Unlocked**
+
+**4.** When prompted for a task, choose **New Task**, name it `Connect buds`
+
+**5.** Tap **+** → **Net** → **Bluetooth Connect**
+
+**6.** Set **Address** to your earbuds' MAC, leave the rest as is
+
+**7.** Back out (top-left arrow) to save. Toggle the profile **on**.
+
+This connects on unlock rather than on playback — Tasker's media triggers are less
+reliable across apps, and unlock is close enough in practice.
+
+*Free alternative:* **MacroDroid** has a similar Bluetooth-connect action with a free
+tier, though it caps the number of macros.
+
+</details>
+
+<details>
+<summary><strong>iPhone</strong> — not possible automatically</summary>
+
+<br>
+
+iOS Shortcuts **cannot connect to a specific Bluetooth device** — Apple exposes no such
+action, and there is no third-party workaround.
+
+What you can do:
+
+- **Play something on the phone.** iOS connects to your last-used audio device, so
+  starting a track or video pulls the earbuds over. One tap, no setup.
+- **Add a Shortcuts automation** for *Open App* → *Set Playback Destination*, which works
+  only for some apps and is unreliable in practice.
+
+Realistically, on iPhone the manual tap is the answer. BudSwitch still saves you the trip
+into Bluetooth settings on the Mac side.
+
+</details>
+
+### Check it worked
+
+1. On the Mac, press <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌘</kbd><kbd>B</kbd> to release the earbuds.
+2. On the phone, play something.
+3. The earbuds should connect within a second or two.
+
+If nothing happens on a Galaxy, open **Modes and Routines → Routines → (your routine) →
+History** — it records whether the routine actually fired, which tells you if the problem
+is the trigger or the connect.
+
+Full walkthrough with more trigger options — on unlock, or when the earbuds go idle:
+**[docs/phone-routine.md](docs/phone-routine.md)**
 
 ---
 
