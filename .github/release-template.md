@@ -26,10 +26,17 @@
 
 Allow **Bluetooth** when asked — it's the only permission BudSwitch needs.
 
-> [!NOTE]
-> **"Send to phone" releases the buds; it can't make your phone grab them.** Connecting has
-> to be initiated from the phone, so on earbuds without multipoint they sit idle until
-> something connects. Start playing audio on your phone and it picks them up straight away.
+## Make it work both ways
+
+BudSwitch pulls your earbuds **to the Mac** on its own. Sending them **back to the phone**
+needs one automation on the phone — it releases the earbuds, but connecting has to be
+initiated from the phone side.
+
+Step-by-step guides for **Samsung Galaxy** (built in, no extra app), **other Android**
+(Tasker), and **iPhone** (not possible automatically — here's why):
+**[Make it work both ways →](https://github.com/offbr0wn/BudSwitch#make-it-work-both-ways)**
+
+Without it, just play something on your phone and it picks the earbuds up straight away.
 
 **Requirements:** macOS 14 (Sonoma) or later. Universal — Apple Silicon and Intel. Your
 earbuds must already be paired in System Settings → Bluetooth.
