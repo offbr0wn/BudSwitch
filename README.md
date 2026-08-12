@@ -153,13 +153,11 @@ Uses **Modes and Routines**, which ships with One UI.
 
 **11.** Tap **Save**, give it a name, **Done**
 
-> [!IMPORTANT]
-> **Step 10 is the one people miss.** "Media is playing" is a *condition*, not a one-off
+> ⚠️ **Don't skip step 10.** "Media is playing" is a *condition*, not a one-off
 > trigger. Modes and Routines undoes a routine's actions when its condition stops holding
 > — so without this step **your earbuds disconnect the moment you pause a video**.
 
-> [!TIP]
-> **The media trigger doesn't catch every app.** In testing it fired for YouTube and
+> 💡 **The media trigger doesn't catch every app.** In testing it fired for YouTube and
 > Spotify but not Instagram or Twitter, which play inline video on a stream Android
 > doesn't count as media.
 >
