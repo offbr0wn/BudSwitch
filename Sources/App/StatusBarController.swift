@@ -158,9 +158,25 @@ final class StatusBarController {
         detailWindow?.makeKeyAndOrderFront(nil)
     }
 
-    func updateIcon(connected: Bool, batteryLeft: Int, batteryRight: Int) {
+    /// - Parameters:
+    ///   - batteryLeft/Right: 0 means "no reading", not "flat". A bud sitting in the case
+    ///     reports 0, so a plain `min()` showed 0% whenever one bud was stowed.
+    ///   - leftPresent/rightPresent: whether that bud is actually out of the case.
+    func updateIcon(
+        connected: Bool,
+        batteryLeft: Int,
+        batteryRight: Int,
+        leftPresent: Bool = true,
+        rightPresent: Bool = true
+    ) {
         guard let button = statusItem?.button else { return }
-        let battery = connected ? "\(min(batteryLeft, batteryRight))%" : ""
+        // Report the lowest reading among buds actually in use — that is the one that
+        // will run out first. Ignore any bud that is in the case or reporting nothing.
+        let readings = [
+            (leftPresent, batteryLeft),
+            (rightPresent, batteryRight),
+        ].filter { $0.0 && $0.1 > 0 }.map(\.1)
+        let battery = connected && !readings.isEmpty ? "\(readings.min() ?? 0)%" : ""
         if button.image != nil {
             // The SF Symbol is always visible; show battery beside it when connected.
             button.title = battery.isEmpty ? "" : " \(battery)"

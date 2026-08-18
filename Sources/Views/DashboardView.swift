@@ -57,8 +57,12 @@ struct DashboardView: View {
             }
 
             HStack(spacing: 30) {
-                CircularBatteryGauge(level: status.batteryLeft, label: "Left", diameter: 76)
-                CircularBatteryGauge(level: status.batteryRight, label: "Right", diameter: 76)
+                CircularBatteryGauge(level: status.batteryLeft, label: "Left",
+                     present: status.batteryLeft > 0 && status.placementLeft != .inCase && status.placementLeft != .inClosedCase,
+                     diameter: 76)
+                CircularBatteryGauge(level: status.batteryRight, label: "Right",
+                     present: status.batteryRight > 0 && status.placementRight != .inCase && status.placementRight != .inClosedCase,
+                     diameter: 76)
             }
 
             if bluetooth.connectedModel?.supportsCaseBattery == true, status.batteryCase > 0 {

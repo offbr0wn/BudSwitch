@@ -88,7 +88,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self.statusBarController?.updateIcon(
                     connected: self.bluetooth.isConnected,
                     batteryLeft: self.bluetooth.status.batteryLeft,
-                    batteryRight: self.bluetooth.status.batteryRight
+                    batteryRight: self.bluetooth.status.batteryRight,
+                    leftPresent: self.bluetooth.status.placementLeft != .inCase
+                        && self.bluetooth.status.placementLeft != .inClosedCase,
+                    rightPresent: self.bluetooth.status.placementRight != .inCase
+                        && self.bluetooth.status.placementRight != .inClosedCase
                 )
             }
         }

@@ -123,8 +123,12 @@ struct MenuPopoverView: View {
 
             if bluetooth.isConnected {
                 HStack(spacing: 28) {
-                    CircularBatteryGauge(level: bluetooth.status.batteryLeft, label: "Left", diameter: 76)
-                    CircularBatteryGauge(level: bluetooth.status.batteryRight, label: "Right", diameter: 76)
+                    CircularBatteryGauge(level: bluetooth.status.batteryLeft, label: "Left",
+                     present: bluetooth.status.batteryLeft > 0 && bluetooth.status.placementLeft != .inCase && bluetooth.status.placementLeft != .inClosedCase,
+                     diameter: 76)
+                    CircularBatteryGauge(level: bluetooth.status.batteryRight, label: "Right",
+                     present: bluetooth.status.batteryRight > 0 && bluetooth.status.placementRight != .inCase && bluetooth.status.placementRight != .inClosedCase,
+                     diameter: 76)
                 }
             } else {
                 // Audio is routing but the SPP channel is not open, so there is no
