@@ -517,7 +517,10 @@ final class AppState: ObservableObject {
         busySeconds = 0
         busyTimer?.invalidate()
         let ticker = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.busySeconds += 1 }
+            // Bind before the Task: re-capturing the weak optional inside concurrently
+            // executing code is rejected by Swift 5.10.
+            guard let self else { return }
+            Task { @MainActor in self.busySeconds += 1 }
         }
         RunLoop.main.add(ticker, forMode: .common)
         busyTimer = ticker
