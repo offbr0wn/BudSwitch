@@ -8,6 +8,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBarController: StatusBarController?
     private let bluetooth = BluetoothManager()
 
+    /// BudSwitch's switching engine: audio/idle/power monitors, the arbiter and the
+    /// global hotkey. Held here so it lives for the process, same as `bluetooth`.
+    private var switching: AppState?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Single instance: if another copy (same bundle id) is already running,
         // hand off to it and quit. Two instances would fight over the one RFCOMM
@@ -40,6 +44,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         bluetooth.onAutoConnected = { [weak controller] in controller?.showPanel() }
         // Prime permission and auto-connect to an already-connected Galaxy Buds.
         bluetooth.startAutoConnect()
+        // Start the switching engine. Constructed after StatusBarController so the
+        // hotkey and monitors come up with a UI already in place to reflect them.
+        switching = AppState()
         // Defer the launch panel so the status item is laid out first; otherwise
         // it anchors to a not-yet-positioned button and appears detached.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
