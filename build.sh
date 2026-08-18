@@ -27,10 +27,8 @@ fi
 # as Apple Silicon. An arm64-only build simply will not launch on an Intel machine.
 echo "Compiling…"
 for arch in arm64 x86_64; do
-	swift build -c release --arch "$arch" >/dev/null
+	swift build -c release --arch "$arch"
 done
-
-swift build -c release --arch arm64 --arch x86_64 >/dev/null 2>&1 || true
 
 ARM=$(swift build -c release --arch arm64 --show-bin-path)/$APP_NAME
 X86=$(swift build -c release --arch x86_64 --show-bin-path)/$APP_NAME
