@@ -99,10 +99,32 @@ struct MenuPopoverView: View {
                     Text("Switch automatically").font(.system(size: 11))
                 }
                 .toggleStyle(.checkbox)
+
                 Spacer()
-                Text(switching.hotkeyDisplay)
-                    .font(.system(size: 10, design: .rounded))
-                    .foregroundStyle(.tertiary)
+
+                // Reset appears only once the binding differs from the default, so it
+                // does not sit there as permanent clutter.
+                if switching.hotkeyCombo != .default {
+                    Button { switching.hotkeyCombo = .default } label: {
+                        Image(systemName: "arrow.uturn.backward")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Reset to \(Hotkey.Combo.default.display)")
+                }
+
+                // Click it and press keys to rebind. Takes effect immediately — no
+                // relaunch, no defaults write.
+                ShortcutRecorder(
+                    combo: Binding(
+                        get: { switching.hotkeyCombo },
+                        set: { switching.hotkeyCombo = $0 }
+                    ),
+                    isEnabled: switching.isHotkeyEnabled
+                )
+                .frame(width: 86, height: 19)
+                .help("Click, then press the keys you want")
             }
 
             if let note = switching.lastAutomationNote {

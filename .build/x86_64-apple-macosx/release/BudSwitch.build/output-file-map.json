@@ -160,12 +160,6 @@
     "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/HUD.swiftdeps",
     "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/HUD.dia"
   },
-  "/Users/shashank/Documents/Budswitch/Sources/UI/MenuView.swift": {
-    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MenuView.swift.o",
-    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MenuView~partial.swiftmodule",
-    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MenuView.swiftdeps",
-    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MenuView.dia"
-  },
   "/Users/shashank/Documents/Budswitch/Sources/UI/ShortcutRecorder.swift": {
     "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/ShortcutRecorder.swift.o",
     "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/ShortcutRecorder~partial.swiftmodule",

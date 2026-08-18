@@ -309,10 +309,6 @@
         },
         {
           "kind" : "file",
-          "name" : "/Users/shashank/Documents/Budswitch/Sources/UI/MenuView.swift"
-        },
-        {
-          "kind" : "file",
           "name" : "/Users/shashank/Documents/Budswitch/Sources/UI/ShortcutRecorder.swift"
         },
         {
@@ -402,7 +398,6 @@
         "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/debug/BudSwitch.build/Logger.swift.o",
         "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/debug/BudSwitch.build/PowerMonitor.swift.o",
         "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/debug/BudSwitch.build/HUD.swift.o",
-        "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/debug/BudSwitch.build/MenuView.swift.o",
         "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/debug/BudSwitch.build/ShortcutRecorder.swift.o",
         "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/debug/BudSwitch.build/AboutView.swift.o",
         "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/debug/BudSwitch.build/BudsModelUI.swift.o",
@@ -567,10 +562,6 @@
         },
         {
           "kind" : "file",
-          "name" : "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/debug/BudSwitch.build/MenuView.swift.o"
-        },
-        {
-          "kind" : "file",
           "name" : "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/debug/BudSwitch.build/ShortcutRecorder.swift.o"
         },
         {
@@ -650,7 +641,6 @@
         "/Users/shashank/Documents/Budswitch/Sources/Switching/Logger.swift",
         "/Users/shashank/Documents/Budswitch/Sources/Switching/PowerMonitor.swift",
         "/Users/shashank/Documents/Budswitch/Sources/UI/HUD.swift",
-        "/Users/shashank/Documents/Budswitch/Sources/UI/MenuView.swift",
         "/Users/shashank/Documents/Budswitch/Sources/UI/ShortcutRecorder.swift",
         "/Users/shashank/Documents/Budswitch/Sources/Views/AboutView.swift",
         "/Users/shashank/Documents/Budswitch/Sources/Views/BudsModelUI.swift",
@@ -705,7 +695,6 @@
       "/Users/shashank/Documents/Budswitch/Sources/Switching/Logger.swift",
       "/Users/shashank/Documents/Budswitch/Sources/Switching/PowerMonitor.swift",
       "/Users/shashank/Documents/Budswitch/Sources/UI/HUD.swift",
-      "/Users/shashank/Documents/Budswitch/Sources/UI/MenuView.swift",
       "/Users/shashank/Documents/Budswitch/Sources/UI/ShortcutRecorder.swift",
       "/Users/shashank/Documents/Budswitch/Sources/Views/AboutView.swift",
       "/Users/shashank/Documents/Budswitch/Sources/Views/BudsModelUI.swift",
@@ -909,10 +898,6 @@
         },
         {
           "kind" : "file",
-          "name" : "/Users/shashank/Documents/Budswitch/Sources/UI/MenuView.swift"
-        },
-        {
-          "kind" : "file",
           "name" : "/Users/shashank/Documents/Budswitch/Sources/UI/ShortcutRecorder.swift"
         },
         {
@@ -1072,10 +1057,6 @@
         {
           "kind" : "file",
           "name" : "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/debug/BudSwitch.build/MenuPopoverView.swift.o"
-        },
-        {
-          "kind" : "file",
-          "name" : "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/debug/BudSwitch.build/MenuView.swift.o"
         },
         {
           "kind" : "file",
