@@ -52,12 +52,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Prime permission and auto-connect to an already-connected Galaxy Buds.
         bluetooth.startAutoConnect()
 
-        // Defer the launch panel so the status item is laid out first; otherwise
-        // it anchors to a not-yet-positioned button and appears detached.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
-            self?.statusBarController?.showPanel()
-        }
+        // Wait for the status item to be laid out before showing the launch panel.
+        // A fixed delay was not enough on a busy menu bar — the panel anchored to a
+        // button still reporting a zero rect and appeared at the far left of the screen.
+        showPanelWhenStatusItemReady(attemptsRemaining: 25)
         startObservingStatus()
+    }
+
+    /// Polls briefly for the status item to settle, then shows the panel. Gives up
+    /// after ~2.5s and shows it anyway rather than never appearing.
+    private func showPanelWhenStatusItemReady(attemptsRemaining: Int) {
+        guard let controller = statusBarController else { return }
+        if controller.isStatusItemPositioned || attemptsRemaining <= 0 {
+            controller.showPanel()
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.showPanelWhenStatusItemReady(attemptsRemaining: attemptsRemaining - 1)
+        }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {

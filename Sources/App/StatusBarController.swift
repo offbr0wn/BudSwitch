@@ -80,6 +80,9 @@ final class StatusBarController {
         return panel
     }
 
+    /// Whether the status item has been laid out and can be anchored to.
+    var isStatusItemPositioned: Bool { statusButtonScreenRect() != nil }
+
     /// Shown on launch / reopen so the user can find the app even if the
     /// menu-bar icon is hard to spot.
     func showPanel() {
@@ -111,16 +114,38 @@ final class StatusBarController {
         let frame = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
 
         var origin: NSPoint
-        if let button = statusItem?.button, let buttonWindow = button.window {
-            let r = buttonWindow.convertToScreen(button.convert(button.bounds, to: nil))
+        // The button's screen rect is only meaningful once the status item has been laid
+        // out. Before that it reads as roughly zero, which anchored the panel to the far
+        // left of the screen instead of under the menu-bar icon.
+        if let r = statusButtonScreenRect() {
             origin = NSPoint(x: r.midX - size.width / 2, y: r.minY - size.height - 4)
         } else {
-            // No visible status button — fall back to top-centre of the screen.
-            origin = NSPoint(x: frame.midX - size.width / 2, y: frame.maxY - size.height - 8)
+            // Not laid out yet (or the icon is hidden): sit under the right-hand end of
+            // the menu bar, where the icon will be, rather than the middle of the screen.
+            origin = NSPoint(x: frame.maxX - size.width - 8, y: frame.maxY - size.height - 8)
         }
         origin.x = min(max(frame.minX + 8, origin.x), frame.maxX - size.width - 8)
         origin.y = min(max(frame.minY + 8, origin.y), frame.maxY - size.height - 8)
         panel.setFrameOrigin(origin)
+    }
+
+    /// The status item's position on screen, or nil if it is not usable yet.
+    ///
+    /// A status item that has not been laid out reports a rect at or near the origin.
+    /// Treating that as real is what put the panel on the far left of the display.
+    private func statusButtonScreenRect() -> NSRect? {
+        guard let button = statusItem?.button, let window = button.window else { return nil }
+        let rect = window.convertToScreen(button.convert(button.bounds, to: nil))
+        // Before the status item's window is placed in the menu bar, convertToScreen is
+        // effectively a no-op: the rect comes back in window-local coordinates (x≈18 on
+        // this machine) rather than screen coordinates. Anchoring to that put the panel
+        // in the bottom-left corner. A real menu-bar button sits at the top of a screen,
+        // so require the rect to be inside one before trusting it.
+        let onScreen = NSScreen.screens.contains { screen in
+            screen.frame.intersects(rect) && rect.maxY > screen.frame.maxY - 60
+        }
+        guard rect.width > 0, onScreen else { return nil }
+        return rect
     }
 
     private func closePanel() {
