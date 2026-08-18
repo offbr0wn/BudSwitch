@@ -57,6 +57,10 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
     /// so the UI can surface the panel — an AirPods-like pop-up on connect.
     var onAutoConnected: (@MainActor () -> Void)?
 
+    /// Latest MULTIPOINT_INFO report, or nil if the buds have not sent one. Read-only —
+    /// see MultipointInfo for why there is no setter.
+    private(set) var multipointInfo: MultipointInfo?
+
     /// Instantiates CoreBluetooth to trigger the system Bluetooth permission
     /// prompt and to gate IOBluetooth access. On modern macOS,
     /// `IOBluetoothDevice.pairedDevices()` routes through CoreBluetooth and
@@ -483,6 +487,9 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
         isConnecting = false
         silentConnect = false
         isConnected = true
+        // The SPP channel is the only route to battery, ANC and MULTIPOINT_INFO, so make
+        // its state visible in the same log stream as everything else.
+        Log.bluetooth.log("SPP channel open to \(self.connectedName ?? "?", privacy: .public)")
         stopScanning()
         sendInitialHandshake()
         if autoConnectShouldNotify {
@@ -593,6 +600,15 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
         switch message.messageId {
         case .statusUpdated:
             parseStatusUpdate(message.payload)
+        case .multipointInfo:
+            // Read-only telemetry: tells us whether the phone is holding the audio, so a
+            // failed switch can say why instead of reporting a bare timeout.
+            if let info = MultipointInfo(payload: message.payload) {
+                multipointInfo = info
+                Log.bluetooth.log(
+                    "multipoint: supported=\(info.supportsMultipoint, privacy: .public) multipleDevices=\(info.hasMultipleDevices, privacy: .public) weHaveFocus=\(info.hasAudioFocus, privacy: .public) streaming=\(info.isStreaming, privacy: .public)"
+                )
+            }
         case .extendedStatusUpdated:
             parseExtendedStatusUpdate(message.payload)
             let ack = SppMessage(messageId: .resp, payload: Data([message.messageId.rawValue, 0]))

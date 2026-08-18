@@ -40,4 +40,10 @@ enum MessageId: UInt8, Sendable {
     case noiseControlsUpdate = 119  // buds → host: ANC changed on the earbud
     case noiseControls = 120        // host → buds: set ANC/Ambient/Off/Adaptive
     case pairingMode = 114
+
+    /// Buds → host. Reports whether the earbuds hold more than one link and whether this
+    /// host currently has audio focus. Read-only: there is no published payload for the
+    /// matching setter (AUTO_SWITCH_AUDIO_OUTPUT = 115), so multipoint cannot be enabled
+    /// from here. See docs/multipoint-research.md.
+    case multipointInfo = 118
 }

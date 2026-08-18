@@ -52,6 +52,12 @@
     "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/release/BudSwitch.build/MessageId.swiftdeps",
     "diagnostics": "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/release/BudSwitch.build/MessageId.dia"
   },
+  "/Users/shashank/Documents/Budswitch/Sources/Bluetooth/MultipointInfo.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/release/BudSwitch.build/MultipointInfo.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/release/BudSwitch.build/MultipointInfo~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/release/BudSwitch.build/MultipointInfo.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/release/BudSwitch.build/MultipointInfo.dia"
+  },
   "/Users/shashank/Documents/Budswitch/Sources/Bluetooth/SppMessage.swift": {
     "object": "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/release/BudSwitch.build/SppMessage.swift.o",
     "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/arm64-apple-macosx/release/BudSwitch.build/SppMessage~partial.swiftmodule",
