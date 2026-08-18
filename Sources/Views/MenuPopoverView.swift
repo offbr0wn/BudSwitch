@@ -53,12 +53,19 @@ struct MenuPopoverView: View {
                 HStack(spacing: 6) {
                     if switching.isBusy {
                         ProgressView().controlSize(.small).scaleEffect(0.7)
+                        // Count up rather than show a bare spinner: the Bluetooth call
+                        // blocks for several seconds and a static spinner looks frozen.
+                        Text(switching.isRouted ? "Releasing… \(switching.busySeconds)s"
+                                                : "Connecting… \(switching.busySeconds)s")
+                            .font(.system(size: 12, weight: .medium))
+                            .monospacedDigit()
+                    } else {
+                        Text(switching.isRouted ? "Send to phone" : "Bring to Mac")
+                            .font(.system(size: 12, weight: .medium))
+                        Text(switching.hotkeyDisplay)
+                            .font(.system(size: 10, design: .rounded))
+                            .foregroundStyle(.tertiary)
                     }
-                    Text(switching.isRouted ? "Send to phone" : "Bring to Mac")
-                        .font(.system(size: 12, weight: .medium))
-                    Text(switching.hotkeyDisplay)
-                        .font(.system(size: 10, design: .rounded))
-                        .foregroundStyle(.tertiary)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 3)

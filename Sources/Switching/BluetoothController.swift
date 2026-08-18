@@ -22,9 +22,33 @@ enum BluetoothController {
     /// Pause *after* each attempt. Three attempts total; the last has no trailing wait.
     private static let retryDelays: [TimeInterval] = [0.5, 1.0, 0]
 
-    /// Page timeout in Bluetooth slots of 0.625ms. 4096 ≈ 2.56s per attempt, so three
-    /// attempts plus backoff stay under ~10s rather than running past 30s.
+    /// Page timeout in Bluetooth slots of 0.625ms. Requested, but macOS does not honour
+    /// it — see `openWithDeadline`.
     private static let pageTimeout: BluetoothHCIPageTimeout = 4096
+
+    /// How long to wait for a connect before giving up on it.
+    ///
+    /// Successful connects measured 6–9s on Buds4 Pro, so this has to clear that. Failures
+    /// block a flat 20s, which is what made the UI look frozen.
+    private static let connectDeadline: TimeInterval = 12
+
+    /// Runs `openConnection` with a deadline, because the page timeout is ignored.
+    ///
+    /// The blocking call is left to finish on its own thread — cancelling an in-flight
+    /// HCI request is not possible, and letting it complete is harmless. All this does is
+    /// stop the serial queue (and the UI) waiting on it.
+    private static func openWithDeadline(_ device: IOBluetoothDevice) -> IOReturn {
+        let semaphore = DispatchSemaphore(value: 0)
+        var result = kIOReturnTimeout
+        Thread.detachNewThread {
+            let r = device.openConnection(nil, withPageTimeout: pageTimeout, authenticationRequired: false)
+            result = r
+            semaphore.signal()
+        }
+        return semaphore.wait(timeout: .now() + connectDeadline) == .success
+            ? result
+            : kIOReturnTimeout
+    }
 
     /// Cached device objects, keyed by address.
     ///
@@ -178,13 +202,16 @@ enum BluetoothController {
             var attempt = 0
             for delay in Self.retryDelays {
                 attempt += 1
-                // Bounded page timeout rather than bare openConnection(). The default can
-                // block well past 10s per attempt, and with retries that leaves the queue
-                // — and the UI's "Connecting…" — stuck for over half a minute when the
-                // buds are simply out of range or held by the phone.
-                rawResult = expectRouted
-                    ? device.openConnection(nil, withPageTimeout: Self.pageTimeout, authenticationRequired: false)
-                    : device.closeConnection()
+                // macOS ignores the page timeout we ask for: measured connects block
+                // 6–9s on success and a flat 20s on failure. Run the call on its own
+                // thread and stop waiting after `connectDeadline`, so an unreachable
+                // device costs seconds rather than twenty. The call itself keeps running
+                // and is harmless — we simply stop blocking the queue on it.
+                if expectRouted {
+                    rawResult = Self.openWithDeadline(device)
+                } else {
+                    rawResult = device.closeConnection()
+                }
 
                 // An already-open link reports as an error; that's still a win.
                 if rawResult == kIOReturnSuccess { break }

@@ -37,8 +37,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // An accessory app has no menu bar of its own, so install a minimal main
         // menu purely to wire up the standard ⌘Q quit key equivalent.
         setupMainMenu()
-        let state = AppState()
+        // AppState enumerates paired devices on init, and IOBluetooth returns an empty
+        // list until CoreBluetooth authorises — which would look like "no devices" and
+        // clear the saved selection. Build a placeholder now for the UI to bind to, then
+        // start the real engine when Bluetooth reports ready.
+        let state = AppState(deferStart: true)
         switching = state
+        bluetooth.onBluetoothReady = { [weak state] in state?.startWhenBluetoothReady() }
         let controller = StatusBarController(bluetooth: bluetooth, switching: state)
         statusBarController = controller
         // Pop the panel up when the buds connect while we're running — an

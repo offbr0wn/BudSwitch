@@ -57,6 +57,11 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
     /// so the UI can surface the panel — an AirPods-like pop-up on connect.
     var onAutoConnected: (@MainActor () -> Void)?
 
+    /// Called once CoreBluetooth reports `.poweredOn`, i.e. when IOBluetooth calls are
+    /// finally safe. Anything touching `pairedDevices()` must wait for this — before
+    /// authorization it returns an empty list rather than failing loudly.
+    var onBluetoothReady: (@MainActor () -> Void)?
+
     /// Latest MULTIPOINT_INFO report, or nil if the buds have not sent one. Read-only —
     /// see MultipointInfo for why there is no setter.
     private(set) var multipointInfo: MultipointInfo?
@@ -795,7 +800,9 @@ extension BluetoothManager: CBCentralManagerDelegate {
         Task { @MainActor in
             switch state {
             case .poweredOn:
+                let wasReady = self.bluetoothReady
                 self.bluetoothReady = true
+                if !wasReady { self.onBluetoothReady?() }
                 if self.pendingScan {
                     self.pendingScan = false
                     self.performScan()
