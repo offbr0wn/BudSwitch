@@ -5,7 +5,28 @@ forum workarounds actually do and what the protocol offers, so nobody has to re-
 
 ## What the Windows "workaround" actually is
 
-The XDA and Reddit threads describe **Samsung Multi Control**, not multipoint. Those are
+Read in full ([XDA thread](https://xdaforums.com/t/how-to-samsung-multi-control-with-non-samsung-windows-pc.4640205/),
+smitel, Nov 2023). The method is:
+
+1. Download **Samsung System Support Service** 1.5.5900.0 from the Microsoft Update Catalog.
+2. Use Device Manager to force that driver onto an unrelated "Other Device" — the author
+   pairs a Galaxy phone to create candidates like `CONTINUITY_MSG_SPP`.
+3. That pulls in **Samsung Settings** and **Samsung Cloud Sync** from the Microsoft Store.
+4. If the backend crashes, **patch the binary in a hex editor** — write `0xc3` (an x86
+   `ret`) at offset `0x68140` of `SamsungSystemSupportEngine.exe` to stub out a function.
+5. Register the patched binary as a Windows service and reboot.
+6. Sign in to a **Samsung Account**, which installs Samsung Continuity Service.
+
+Every step is Windows-specific: Microsoft Update Catalog, Device Manager driver forcing,
+Microsoft Store apps, `sc create`, and an x86 binary patch. None of it has a macOS
+equivalent — there is no Samsung System Support Service for macOS to install, force, or
+patch.
+
+It also confirms what this feature actually is. Note step 6: it requires a **Samsung
+Account**. The buds are not being unlocked; the PC is being dressed up as a Galaxy Book so
+Samsung's account-bound service will talk to it.
+
+The threads describe **Samsung Multi Control**, not multipoint. Those are
 different things:
 
 - **Multipoint** — the earbuds hold two audio links at once and switch between them. The
@@ -33,8 +54,11 @@ open reverse-engineering of the Galaxy Buds SPP protocol:
 A2DP/HFP/CIS/BIS. Useful telemetry — it tells you what the buds think is going on — but it
 is a **report, not a control**.
 
-Checked on 2026-08-12: GalaxyBudsClient contains **no setter for either message**. If a
-working "turn multipoint on" command existed, that project would almost certainly have it.
+Re-checked 2026-08-18 against the repository tree rather than code search:
+`AUTO_SWITCH_AUDIO_OUTPUT` appears **only in the enum declaration** — no encoder, no
+caller, nothing. `MULTIPOINT_INFO` appears only in its decoder. GalaxyBudsClient ships
+**no setter for either**. If a working "turn multipoint on" command existed, that project
+would have it.
 
 ## What this means for BudSwitch
 
