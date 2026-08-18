@@ -6,6 +6,7 @@ import SwiftUI
 /// button, which opens the detail window.
 struct MenuPopoverView: View {
     @Bindable var bluetooth: BluetoothManager
+    @ObservedObject var switching: AppState
     let openDetail: () -> Void
 
     private var tint: Color { bluetooth.connectedModel?.tint ?? .blue }
@@ -17,6 +18,7 @@ struct MenuPopoverView: View {
             } else {
                 disconnected
             }
+            quickConnect
             footer
         }
         .padding(18)
@@ -24,6 +26,60 @@ struct MenuPopoverView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .focusEffectDisabled() // no focus ring on the auto-focused default button
+    }
+
+    /// Where the earbuds are, and the one button that moves them. Shown whether or not
+    /// the SPP channel is up, because switching works without it — the audio route is the
+    /// source of truth, not the protocol connection.
+    private var quickConnect: some View {
+        VStack(spacing: 8) {
+            Divider()
+
+            HStack(spacing: 8) {
+                Image(systemName: "laptopcomputer")
+                    .font(.system(size: 12))
+                    .foregroundStyle(switching.isRouted ? Color.primary : Color.secondary.opacity(0.5))
+
+                Rectangle()
+                    .fill(switching.isRouted ? tint.opacity(0.5) : Color.secondary.opacity(0.25))
+                    .frame(height: 2)
+
+                Image(systemName: "iphone")
+                    .font(.system(size: 12))
+                    .foregroundStyle(switching.isRouted ? Color.secondary.opacity(0.5) : Color.primary)
+            }
+
+            Button(action: { switching.toggle() }) {
+                HStack(spacing: 6) {
+                    if switching.isBusy {
+                        ProgressView().controlSize(.small).scaleEffect(0.7)
+                    }
+                    Text(switching.isRouted ? "Send to phone" : "Bring to Mac")
+                        .font(.system(size: 12, weight: .medium))
+                    Text(switching.hotkeyDisplay)
+                        .font(.system(size: 10, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 3)
+            }
+            .buttonStyle(.bordered)
+            .disabled(switching.isBusy || switching.selectedAddress == nil)
+
+            Toggle(isOn: $switching.isAutomationEnabled) {
+                Text("Switch automatically").font(.system(size: 11))
+            }
+            .toggleStyle(.checkbox)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let note = switching.lastAutomationNote {
+                Text(note)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
     }
 
     private var connected: some View {

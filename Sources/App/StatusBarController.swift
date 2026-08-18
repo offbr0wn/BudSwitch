@@ -12,8 +12,10 @@ final class StatusBarController {
     private var detailWindow: NSWindow?
     private var outsideClickMonitor: Any?
     private let bluetooth: BluetoothManager
+    private let switching: AppState
 
-    init(bluetooth: BluetoothManager) {
+    init(bluetooth: BluetoothManager, switching: AppState) {
+        self.switching = switching
         self.bluetooth = bluetooth
         setupStatusItem()
     }
@@ -51,7 +53,7 @@ final class StatusBarController {
 
     private func makePanel() -> NSPanel {
         let hosting = NSHostingController(
-            rootView: MenuPopoverView(bluetooth: bluetooth) { [weak self] in
+            rootView: MenuPopoverView(bluetooth: bluetooth, switching: switching) { [weak self] in
                 self?.openDetailWindow()
             }
         )

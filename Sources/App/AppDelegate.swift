@@ -37,16 +37,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // An accessory app has no menu bar of its own, so install a minimal main
         // menu purely to wire up the standard ⌘Q quit key equivalent.
         setupMainMenu()
-        let controller = StatusBarController(bluetooth: bluetooth)
+        let state = AppState()
+        switching = state
+        let controller = StatusBarController(bluetooth: bluetooth, switching: state)
         statusBarController = controller
         // Pop the panel up when the buds connect while we're running — an
         // AirPods-like appearance.
         bluetooth.onAutoConnected = { [weak controller] in controller?.showPanel() }
         // Prime permission and auto-connect to an already-connected Galaxy Buds.
         bluetooth.startAutoConnect()
-        // Start the switching engine. Constructed after StatusBarController so the
-        // hotkey and monitors come up with a UI already in place to reflect them.
-        switching = AppState()
+
         // Defer the launch panel so the status item is laid out first; otherwise
         // it anchors to a not-yet-positioned button and appears detached.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
