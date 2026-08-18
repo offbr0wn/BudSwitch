@@ -22,8 +22,11 @@ struct MenuPopoverView: View {
                 connected
             } else {
                 disconnected
+                // With no earbuds present the switching card is the only useful control,
+                // so it stays visible; when they are connected it sits inside `connected`
+                // directly under the device it acts on.
+                quickConnect
             }
-            quickConnect
             footer
         }
         .padding(18)
@@ -36,53 +39,71 @@ struct MenuPopoverView: View {
     /// Where the earbuds are, and the one button that moves them. Shown whether or not
     /// the SPP channel is up, because switching works without it — the audio route is the
     /// source of truth, not the protocol connection.
+    /// Where the earbuds are, and the control that moves them.
+    ///
+    /// Styled as a grouped card to match the ANC segmented control below it — the earlier
+    /// version was bare controls on the popover background and read as detached from the
+    /// device it refers to.
     private var quickConnect: some View {
-        VStack(spacing: 8) {
-            Divider()
+        VStack(spacing: 10) {
+            // Mac ——●—— Phone. The filled dot marks the side that currently has the audio,
+            // so the row answers "where are my earbuds" before any text is read.
+            HStack(spacing: 0) {
+                endpoint(symbol: "laptopcomputer", active: switching.isRouted)
 
-            HStack(spacing: 8) {
-                Image(systemName: "laptopcomputer")
-                    .font(.system(size: 12))
-                    .foregroundStyle(switching.isRouted ? Color.primary : Color.secondary.opacity(0.5))
+                ZStack {
+                    Capsule()
+                        .fill(Color.secondary.opacity(0.25))
+                        .frame(height: 2)
+                    if !switching.isBusy {
+                        Circle()
+                            .fill(tint)
+                            .frame(width: 7, height: 7)
+                            .frame(maxWidth: .infinity,
+                                   alignment: switching.isRouted ? .leading : .trailing)
+                    }
+                }
+                .frame(height: 12)
+                .padding(.horizontal, 8)
 
-                Rectangle()
-                    .fill(switching.isRouted ? tint.opacity(0.5) : Color.secondary.opacity(0.25))
-                    .frame(height: 2)
-
-                Image(systemName: "iphone")
-                    .font(.system(size: 12))
-                    .foregroundStyle(switching.isRouted ? Color.secondary.opacity(0.5) : Color.primary)
+                endpoint(symbol: "iphone", active: !switching.isRouted)
             }
+            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: switching.isRouted)
 
             Button(action: { switching.toggle() }) {
                 HStack(spacing: 6) {
                     if switching.isBusy {
-                        ProgressView().controlSize(.small).scaleEffect(0.7)
-                        // Count up rather than show a bare spinner: the Bluetooth call
-                        // blocks for several seconds and a static spinner looks frozen.
+                        ProgressView().controlSize(.small).scaleEffect(0.6)
+                        // Count up rather than show a bare spinner: openConnection blocks
+                        // for several seconds and a static spinner reads as a hang.
                         Text(switching.isRouted ? "Releasing… \(switching.busySeconds)s"
                                                 : "Connecting… \(switching.busySeconds)s")
-                            .font(.system(size: 12, weight: .medium))
                             .monospacedDigit()
                     } else {
+                        Image(systemName: switching.isRouted
+                              ? "iphone.and.arrow.forward" : "laptopcomputer.and.arrow.down")
+                            .font(.system(size: 11))
                         Text(switching.isRouted ? "Send to phone" : "Bring to Mac")
-                            .font(.system(size: 12, weight: .medium))
-                        Text(switching.hotkeyDisplay)
-                            .font(.system(size: 10, design: .rounded))
-                            .foregroundStyle(.tertiary)
                     }
                 }
+                .font(.system(size: 12, weight: .medium))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 3)
+                .padding(.vertical, 5)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.borderedProminent)
+            .tint(tint)
             .disabled(switching.isBusy || switching.selectedAddress == nil)
 
-            Toggle(isOn: $switching.isAutomationEnabled) {
-                Text("Switch automatically").font(.system(size: 11))
+            HStack(spacing: 6) {
+                Toggle(isOn: $switching.isAutomationEnabled) {
+                    Text("Switch automatically").font(.system(size: 11))
+                }
+                .toggleStyle(.checkbox)
+                Spacer()
+                Text(switching.hotkeyDisplay)
+                    .font(.system(size: 10, design: .rounded))
+                    .foregroundStyle(.tertiary)
             }
-            .toggleStyle(.checkbox)
-            .frame(maxWidth: .infinity, alignment: .leading)
 
             if let note = switching.lastAutomationNote {
                 Text(note)
@@ -92,6 +113,15 @@ struct MenuPopoverView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.secondary.opacity(0.12)))
+    }
+
+    private func endpoint(symbol: String, active: Bool) -> some View {
+        Image(systemName: symbol)
+            .font(.system(size: 13))
+            .foregroundStyle(active ? Color.primary : Color.secondary.opacity(0.45))
+            .frame(width: 18)
     }
 
     private var connected: some View {
@@ -120,6 +150,8 @@ struct MenuPopoverView: View {
                 }
                 Spacer()
             }
+
+            quickConnect
 
             if bluetooth.isConnected {
                 HStack(spacing: 28) {
