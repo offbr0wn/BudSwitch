@@ -32,22 +32,34 @@ enum BluetoothController {
     /// block a flat 20s, which is what made the UI look frozen.
     private static let connectDeadline: TimeInterval = 12
 
-    /// Runs `openConnection` with a deadline, because the page timeout is ignored.
+    /// Runs `openConnection` and returns as soon as the earbuds are *actually usable*.
     ///
-    /// The blocking call is left to finish on its own thread — cancelling an in-flight
-    /// HCI request is not possible, and letting it complete is harmless. All this does is
-    /// stop the serial queue (and the UI) waiting on it.
-    private static func openWithDeadline(_ device: IOBluetoothDevice) -> IOReturn {
+    /// Two things made this necessary. macOS ignores the page timeout we request, so the
+    /// call itself blocks 2–20s. And the call returning is the wrong signal anyway: the
+    /// audio route often flips to the earbuds seconds before `openConnection` returns —
+    /// observed returning `kIOReturnTimeout` at 12s on a connection that had already
+    /// succeeded at 10s, so a perfectly good switch was reported as "buds didn't respond".
+    ///
+    /// So poll the route while the call runs and finish the moment audio lands. The
+    /// blocking call is left to complete on its own thread; an in-flight HCI request
+    /// cannot be cancelled, and letting it finish is harmless.
+    private static func openWithDeadline(_ device: IOBluetoothDevice, address: String) -> IOReturn {
         let semaphore = DispatchSemaphore(value: 0)
         var result = kIOReturnTimeout
         Thread.detachNewThread {
-            let r = device.openConnection(nil, withPageTimeout: pageTimeout, authenticationRequired: false)
-            result = r
+            result = device.openConnection(nil, withPageTimeout: pageTimeout, authenticationRequired: false)
             semaphore.signal()
         }
-        return semaphore.wait(timeout: .now() + connectDeadline) == .success
-            ? result
-            : kIOReturnTimeout
+
+        let deadline = Date().addingTimeInterval(connectDeadline)
+        while Date() < deadline {
+            // The route is the thing the user cares about — once audio is on the earbuds
+            // the switch is done, whatever the call is still doing.
+            if AudioRouteProbe.isRoutedToDevice(address: address) { return kIOReturnSuccess }
+            if semaphore.wait(timeout: .now() + 0.15) == .success { return result }
+        }
+        // One last look: the route may have landed inside the final poll gap.
+        return AudioRouteProbe.isRoutedToDevice(address: address) ? kIOReturnSuccess : kIOReturnTimeout
     }
 
     /// Cached device objects, keyed by address.
@@ -208,7 +220,7 @@ enum BluetoothController {
                 // device costs seconds rather than twenty. The call itself keeps running
                 // and is harmless — we simply stop blocking the queue on it.
                 if expectRouted {
-                    rawResult = Self.openWithDeadline(device)
+                    rawResult = Self.openWithDeadline(device, address: address)
                 } else {
                     rawResult = device.closeConnection()
                 }
@@ -269,7 +281,11 @@ enum BluetoothController {
             // satisfied by our own speaker fallback, reporting success while the buds stay
             // held by this Mac.
             let confirmation = expectRouted
-                ? AudioRouteProbe.waitForRoute(address: address, expected: true)
+                // A2DP can take several seconds to follow the baseband link — measured
+                // 5.9s after openConnection returned success. Too short a window here
+                // reports a working connect as "baseband only (no audio)", so allow for
+                // the slow case rather than the typical one.
+                ? AudioRouteProbe.waitForRoute(address: address, expected: true, timeout: 8.0)
                 // Shorter than the connect wait: the release is confirmed by the route
                 // check below if the link lingers, so there is no need to block for 5s.
                 : AudioRouteProbe.waitForLinkDrop(address: address, timeout: 2.0)
