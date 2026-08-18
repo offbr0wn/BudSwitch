@@ -105,12 +105,22 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
     private func attemptAutoConnect(notify: Bool) {
         guard bluetoothReady, !isConnected, rfcommChannel == nil, !isConnecting else { return }
         guard let paired = IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] else { return }
-        for device in paired where device.isConnected() && isGalaxyBudsName(device.name ?? "") {
-            autoConnectShouldNotify = notify
-            let model = BudsModel.detect(from: device.name ?? "") ?? .buds4Pro
-            connect(to: DiscoveredDevice(device: device), model: model, silent: true)
-            return
-        }
+
+        let candidates = paired.filter { $0.isConnected() && isGalaxyBudsName($0.name ?? "") }
+
+        // Prefer whatever BudSwitch is set to manage. Without this the first connected
+        // device with "buds" in its name wins — which matched "Arctis GameBuds" and made
+        // the panel describe a SteelSeries headset while the Buds4 Pro sat connected and
+        // ignored, showing no battery because it does not speak Samsung's protocol.
+        let selected = DeviceStore.address?.lowercased()
+        let device = candidates.first {
+            ($0.addressString ?? "").lowercased() == selected
+        } ?? candidates.first
+
+        guard let device else { return }
+        autoConnectShouldNotify = notify
+        let model = BudsModel.detect(from: device.name ?? "") ?? .buds4Pro
+        connect(to: DiscoveredDevice(device: device), model: model, silent: true)
     }
 
     func primeBluetoothPermission() {
@@ -771,9 +781,20 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
         return .ancAmbient
     }
 
+    /// Whether a device name looks like Samsung Galaxy Buds.
+    ///
+    /// Deliberately narrow. A bare `contains("buds")` also matches "Arctis GameBuds",
+    /// "Pixel Buds" and similar — the app would then try to speak Samsung's SPP protocol
+    /// to a headset that does not understand it and show an empty panel.
     private nonisolated func isGalaxyBudsName(_ name: String) -> Bool {
         let lower = name.lowercased()
-        return lower.contains("galaxy buds") || lower.contains("buds")
+        if lower.contains("galaxy buds") { return true }
+        // Samsung devices are often renamed ("Shashank's Buds4 Pro"), so also accept a
+        // model designation, which third-party names do not carry.
+        return lower.range(of: #"buds\s*[0-9]+"#, options: .regularExpression) != nil
+            || lower.contains("buds pro")
+            || lower.contains("buds live")
+            || lower.contains("buds+")
     }
 
     private nonisolated func uuidStringToBytes(_ uuidString: String) -> [UInt8] {
