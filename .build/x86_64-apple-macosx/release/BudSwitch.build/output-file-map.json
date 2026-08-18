@@ -1,0 +1,235 @@
+{
+  "": {
+    "dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudSwitch.d",
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudSwitch.o",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/primary.swiftdeps"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/App/AppDelegate.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AppDelegate.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AppDelegate~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AppDelegate.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AppDelegate.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/App/AppState.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AppState.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AppState~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AppState.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AppState.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/App/BudsApp.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsApp.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsApp.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsApp.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/App/LaunchAtLogin.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/LaunchAtLogin.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/LaunchAtLogin~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/LaunchAtLogin.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/LaunchAtLogin.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/App/StatusBarController.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/StatusBarController.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/StatusBarController~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/StatusBarController.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/StatusBarController.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Bluetooth/BluetoothManager.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BluetoothManager.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BluetoothManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BluetoothManager.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BluetoothManager.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Bluetooth/CRC16.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/CRC16.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/CRC16~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/CRC16.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/CRC16.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Bluetooth/MessageId.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MessageId.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MessageId~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MessageId.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MessageId.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Bluetooth/SppMessage.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/SppMessage.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/SppMessage~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/SppMessage.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/SppMessage.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Models/BudsModel.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsModel.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsModel.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsModel.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Models/BudsStatus.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsStatus.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsStatus~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsStatus.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsStatus.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Models/EqualizerPreset.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/EqualizerPreset.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/EqualizerPreset~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/EqualizerPreset.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/EqualizerPreset.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Models/NoiseControlMode.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/NoiseControlMode.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/NoiseControlMode~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/NoiseControlMode.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/NoiseControlMode.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Models/TouchControls.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/TouchControls.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/TouchControls~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/TouchControls.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/TouchControls.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Switching/AppFocusMonitor.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AppFocusMonitor.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AppFocusMonitor~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AppFocusMonitor.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AppFocusMonitor.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Switching/Arbiter.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/Arbiter.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/Arbiter~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/Arbiter.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/Arbiter.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Switching/AudioMonitor.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AudioMonitor.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AudioMonitor~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AudioMonitor.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AudioMonitor.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Switching/AudioRouteProbe.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AudioRouteProbe.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AudioRouteProbe~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AudioRouteProbe.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AudioRouteProbe.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Switching/BluetoothController.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BluetoothController.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BluetoothController~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BluetoothController.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BluetoothController.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Switching/DeviceStore.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/DeviceStore.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/DeviceStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/DeviceStore.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/DeviceStore.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Switching/Hotkey.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/Hotkey.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/Hotkey~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/Hotkey.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/Hotkey.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Switching/IdleMonitor.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/IdleMonitor.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/IdleMonitor~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/IdleMonitor.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/IdleMonitor.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Switching/Logger.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/Logger.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/Logger~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/Logger.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/Logger.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Switching/PowerMonitor.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/PowerMonitor.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/PowerMonitor~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/PowerMonitor.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/PowerMonitor.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/UI/HUD.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/HUD.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/HUD~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/HUD.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/HUD.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/UI/MenuView.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MenuView.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MenuView~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MenuView.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MenuView.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/UI/ShortcutRecorder.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/ShortcutRecorder.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/ShortcutRecorder~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/ShortcutRecorder.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/ShortcutRecorder.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Views/AboutView.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AboutView.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AboutView~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AboutView.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/AboutView.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Views/BudsModelUI.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsModelUI.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsModelUI~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsModelUI.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/BudsModelUI.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Views/CircularBatteryGauge.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/CircularBatteryGauge.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/CircularBatteryGauge~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/CircularBatteryGauge.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/CircularBatteryGauge.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Views/DashboardView.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/DashboardView.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/DashboardView~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/DashboardView.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/DashboardView.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Views/EarbudControlsView.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/EarbudControlsView.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/EarbudControlsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/EarbudControlsView.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/EarbudControlsView.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Views/FindMyEarbudsView.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/FindMyEarbudsView.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/FindMyEarbudsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/FindMyEarbudsView.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/FindMyEarbudsView.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Views/MenuPopoverView.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MenuPopoverView.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MenuPopoverView~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MenuPopoverView.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/MenuPopoverView.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Views/PopoverView.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/PopoverView.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/PopoverView~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/PopoverView.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/PopoverView.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Views/SoundAncView.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/SoundAncView.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/SoundAncView~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/SoundAncView.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/SoundAncView.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/Sources/Views/WizardView.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/WizardView.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/WizardView~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/WizardView.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/WizardView.dia"
+  },
+  "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/DerivedSources/resource_bundle_accessor.swift": {
+    "object": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/resource_bundle_accessor.swift.o",
+    "swiftmodule": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/resource_bundle_accessor~partial.swiftmodule",
+    "swift-dependencies": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/resource_bundle_accessor.swiftdeps",
+    "diagnostics": "/Users/shashank/Documents/Budswitch/.build/x86_64-apple-macosx/release/BudSwitch.build/resource_bundle_accessor.dia"
+  }
+}
