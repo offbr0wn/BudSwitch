@@ -13,7 +13,12 @@ struct MenuPopoverView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            if bluetooth.isConnected {
+            // `bluetooth.isConnected` means the SPP data channel is open — the path to
+            // battery, ANC and EQ. The earbuds can be perfectly connected for audio with
+            // no SPP channel, so using it for the header showed "No Buds Connected" while
+            // audio was playing through them. Trust the audio route for presence, and let
+            // the SPP state decide only whether the detail controls appear.
+            if switching.isRouted || bluetooth.isConnected {
                 connected
             } else {
                 disconnected
@@ -96,20 +101,41 @@ struct MenuPopoverView: View {
                     .font(.system(size: 22, weight: .medium))
                     .foregroundStyle(tint)
                 VStack(alignment: .leading, spacing: 1) {
+                    // Fall back to the device BudSwitch has selected: without an SPP
+                    // channel the protocol layer has no name to offer, but we still know
+                    // which earbuds these are.
                     Text(verbatim: bluetooth.connectedName
-                         ?? bluetooth.connectedModel?.rawValue ?? "Galaxy Buds")
+                         ?? bluetooth.connectedModel?.rawValue
+                         ?? switching.selectedName ?? "Galaxy Buds")
                         .font(.system(size: 15, weight: .semibold))
                     HStack(spacing: 5) {
-                        Circle().fill(.green).frame(width: 6, height: 6)
-                        Text("Connected").font(.caption).foregroundStyle(.secondary)
+                        Circle().fill(bluetooth.isConnected ? .green : .yellow)
+                            .frame(width: 6, height: 6)
+                        // Distinguish "audio works" from "we can also read battery/ANC".
+                        // Claiming plain "Connected" with no SPP channel would leave the
+                        // empty battery gauges below unexplained.
+                        Text(bluetooth.isConnected ? "Connected" : "Audio connected")
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 Spacer()
             }
 
-            HStack(spacing: 28) {
-                CircularBatteryGauge(level: bluetooth.status.batteryLeft, label: "Left", diameter: 76)
-                CircularBatteryGauge(level: bluetooth.status.batteryRight, label: "Right", diameter: 76)
+            if bluetooth.isConnected {
+                HStack(spacing: 28) {
+                    CircularBatteryGauge(level: bluetooth.status.batteryLeft, label: "Left", diameter: 76)
+                    CircularBatteryGauge(level: bluetooth.status.batteryRight, label: "Right", diameter: 76)
+                }
+            } else {
+                // Audio is routing but the SPP channel is not open, so there is no
+                // battery or ANC data to show. Offer the action rather than empty dials.
+                VStack(spacing: 6) {
+                    Text("Battery and controls need a data connection")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("Connect") { bluetooth.startAutoConnect() }
+                        .controlSize(.small)
+                }
             }
 
             if bluetooth.connectedModel?.supportsANC == true {
