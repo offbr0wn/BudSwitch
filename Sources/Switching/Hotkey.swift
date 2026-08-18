@@ -118,11 +118,18 @@ final class Hotkey {
         }
 
         /// A shortcut with no modifiers — or only Shift — would fire while typing.
+        /// Whether this is safe to claim globally.
+        ///
+        /// A global hotkey is taken from every app, so a common shortcut becomes
+        /// unusable everywhere. One modifier is not enough: ⌃B is "back one character"
+        /// in every text field, ⌘B is bold, ⌥B types an integral sign. Require two of
+        /// ⌃⌥⌘ — ⇧ does not count, since ⇧B is just a capital B.
         var isSafe: Bool {
             let mods = flags.intersection(Self.relevant)
-            if mods.contains(.control) || mods.contains(.option) || mods.contains(.command) {
-                return true
-            }
+            let strong = [NSEvent.ModifierFlags.control, .option, .command]
+                .filter { mods.contains($0) }
+                .count
+            if strong >= 2 { return true }
             // Function keys are safe bare; they produce no text.
             return Self.specialNames[keyCode]?.hasPrefix("F") == true
         }
@@ -173,7 +180,11 @@ final class Hotkey {
         else { return action.defaultCombo }
         // A stored keyCode of 0 with no modifiers is how "unassigned" is persisted.
         if code == 0 && mods == 0 { return nil }
-        return Combo(keyCode: UInt16(code), modifiers: UInt(mods))
+        let stored = Combo(keyCode: UInt16(code), modifiers: UInt(mods))
+        // A binding saved under looser rules (a single modifier was once accepted) would
+        // otherwise persist and keep stealing a common shortcut from every app.
+        guard stored.isSafe else { return action.defaultCombo }
+        return stored
     }
 
     static func setCombo(_ combo: Combo?, for action: Action) {

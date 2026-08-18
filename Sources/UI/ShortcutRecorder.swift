@@ -90,7 +90,7 @@ final class RecorderView: NSView {
         // A bare letter would fire mid-sentence. Refuse it and say why, rather than
         // accepting a binding that makes the keyboard unusable.
         guard candidate.isSafe else {
-            rejection = "Add ⌘, ⌃ or ⌥"
+            rejection = "Use two of ⌃⌥⌘"
             needsDisplay = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
                 self?.rejection = nil
