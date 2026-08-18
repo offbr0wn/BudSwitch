@@ -51,15 +51,24 @@ final class StatusBarController {
 
     // MARK: - Quick panel
 
+    /// A non-activating panel that can still take key focus.
+    ///
+    /// `.nonactivatingPanel` keeps the app in the background when the panel opens, which
+    /// is right for a menu-bar popover — but a window that never becomes key never routes
+    /// keyDown to its first responder, so the shortcut recorder sat on "Press keys…"
+    /// forever. Overriding `canBecomeKey` restores keyboard input without making the app
+    /// steal focus on open.
+    private final class KeyablePanel: NSPanel {
+        override var canBecomeKey: Bool { true }
+    }
+
     private func makePanel() -> NSPanel {
         let hosting = NSHostingController(
             rootView: MenuPopoverView(bluetooth: bluetooth, switching: switching) { [weak self] in
                 self?.openDetailWindow()
             }
         )
-        let panel = NSPanel(
-            contentViewController: hosting
-        )
+        let panel = KeyablePanel(contentViewController: hosting)
         panel.styleMask = [.borderless, .nonactivatingPanel]
         panel.isFloatingPanel = true
         panel.level = .popUpMenu

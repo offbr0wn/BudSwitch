@@ -131,18 +131,61 @@ final class Hotkey {
     /// Persisted so a custom binding survives relaunch.
     ///   defaults write com.budswitch.mac hotkeyKeyCode -int 11
     ///   defaults write com.budswitch.mac hotkeyModifiers -int 1572864
+    /// Which action a binding performs.
+    ///
+    /// `toggle` moves the earbuds to whichever side does not currently have them. The
+    /// directional actions are unconditional, so you always know what a key will do
+    /// without first working out where the earbuds are.
+    enum Action: String, CaseIterable, Sendable {
+        case toggle
+        case bringToMac
+        case sendToPhone
+
+        var title: String {
+            switch self {
+            case .toggle: return "Toggle"
+            case .bringToMac: return "Bring to Mac"
+            case .sendToPhone: return "Send to phone"
+            }
+        }
+
+        /// Existing installs stored the toggle under unprefixed keys; keep those so a
+        /// binding set before this change survives the upgrade.
+        var keyCodeDefaultsKey: String {
+            self == .toggle ? "hotkeyKeyCode" : "hotkeyKeyCode_\(rawValue)"
+        }
+
+        var modifiersDefaultsKey: String {
+            self == .toggle ? "hotkeyModifiers" : "hotkeyModifiers_\(rawValue)"
+        }
+
+        /// Only the toggle ships with a binding. The directional keys stay unset until
+        /// someone asks for them, so nothing new starts intercepting keystrokes.
+        var defaultCombo: Combo? {
+            self == .toggle ? .default : nil
+        }
+    }
+
+    static func combo(for action: Action) -> Combo? {
+        let defaults = UserDefaults.standard
+        guard let code = defaults.object(forKey: action.keyCodeDefaultsKey) as? Int,
+              let mods = defaults.object(forKey: action.modifiersDefaultsKey) as? Int
+        else { return action.defaultCombo }
+        // A stored keyCode of 0 with no modifiers is how "unassigned" is persisted.
+        if code == 0 && mods == 0 { return nil }
+        return Combo(keyCode: UInt16(code), modifiers: UInt(mods))
+    }
+
+    static func setCombo(_ combo: Combo?, for action: Action) {
+        let defaults = UserDefaults.standard
+        defaults.set(Int(combo?.keyCode ?? 0), forKey: action.keyCodeDefaultsKey)
+        defaults.set(Int(combo?.modifiers ?? 0), forKey: action.modifiersDefaultsKey)
+    }
+
+    /// The toggle binding. Kept for callers that only care about the primary shortcut.
     static var combo: Combo {
-        get {
-            let defaults = UserDefaults.standard
-            guard let code = defaults.object(forKey: "hotkeyKeyCode") as? Int,
-                  let mods = defaults.object(forKey: "hotkeyModifiers") as? Int
-            else { return .default }
-            return Combo(keyCode: UInt16(code), modifiers: UInt(mods))
-        }
-        set {
-            UserDefaults.standard.set(Int(newValue.keyCode), forKey: "hotkeyKeyCode")
-            UserDefaults.standard.set(Int(newValue.modifiers), forKey: "hotkeyModifiers")
-        }
+        get { combo(for: .toggle) ?? .default }
+        set { setCombo(newValue, for: .toggle) }
     }
 
     /// Whether the hotkey is armed at all.

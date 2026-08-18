@@ -33,8 +33,13 @@ final class RecorderView: NSView {
     private var isRecording = false {
         didSet {
             needsDisplay = true
-            // Escape-to-cancel and click-outside both need the window's key status.
-            if isRecording { window?.makeFirstResponder(self) }
+            guard isRecording, let window else { return }
+            // The menu-bar panel is non-activating, so it is not key when clicked and a
+            // non-key window does not deliver keyDown to its first responder — the
+            // recorder would sit on "Press keys…" and capture nothing. Ask for key status
+            // explicitly, then take first responder.
+            window.makeKeyAndOrderFront(nil)
+            window.makeFirstResponder(self)
         }
     }
 
