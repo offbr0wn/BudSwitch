@@ -47,6 +47,13 @@ final class AppState: ObservableObject {
     /// True while a blocking Bluetooth call is in flight, so the menu can disable actions.
     @Published private(set) var isBusy = false
 
+    /// Seconds the in-flight switch has been running. `openConnection()` blocks for
+    /// 6–20s on this hardware regardless of the page timeout we request, so a static
+    /// spinner reads as a frozen app. Counting up shows it is still working.
+    @Published private(set) var busySeconds = 0
+
+    private var busyTimer: Timer?
+
     private var pollTimer: Timer?
 
     /// `isConnected()` is cached and there is no push notification for route changes,
@@ -117,6 +124,31 @@ final class AppState: ObservableObject {
     }
 
     init() {
+        start()
+    }
+
+    /// Builds the state without touching IOBluetooth.
+    ///
+    /// On modern macOS `pairedDevices()` returns an empty list until CoreBluetooth
+    /// authorises, and an empty list is indistinguishable from "your device was
+    /// unpaired" — which would clear the saved selection. Callers that own a
+    /// CoreBluetooth session pass `deferStart: true` and call
+    /// `startWhenBluetoothReady()` once it reports `.poweredOn`.
+    init(deferStart: Bool) {
+        guard !deferStart else { return }
+        start()
+    }
+
+    private var hasStarted = false
+
+    /// Starts device enumeration, monitors and the hotkey. Safe to call more than once.
+    func startWhenBluetoothReady() {
+        guard !hasStarted else { return }
+        start()
+    }
+
+    private func start() {
+        hasStarted = true
         refreshDevices()
         refreshRoute()
         startPolling()
@@ -482,12 +514,24 @@ final class AppState: ObservableObject {
     ) {
         guard let address = selectedAddress, !isBusy else { return }
         isBusy = true
+        busySeconds = 0
+        busyTimer?.invalidate()
+        let ticker = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+            // Bind before the Task: re-capturing the weak optional inside concurrently
+            // executing code is rejected by Swift 5.10.
+            guard let self else { return }
+            Task { @MainActor in self.busySeconds += 1 }
+        }
+        RunLoop.main.add(ticker, forMode: .common)
+        busyTimer = ticker
         operation(address) { [weak self] record in
             Task { @MainActor in
                 guard let self else { return }
                 self.history.insert(record, at: 0)
                 if self.history.count > 10 { self.history.removeLast() }
                 self.isBusy = false
+                self.busyTimer?.invalidate()
+                self.busyTimer = nil
                 self.refreshRoute()
                 self.showResultHUD(record)
             }

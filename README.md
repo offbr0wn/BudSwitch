@@ -5,6 +5,7 @@
 # BudSwitch
 
 **Your earbuds follow you between your Mac and your phone — automatically.**
+**Battery, ANC and EQ for Galaxy Buds, in the same panel.**
 
 <sub>Free and open source · No account, no telemetry, no network access</sub>
 
@@ -26,6 +27,10 @@ digging into Bluetooth settings, disconnecting, reconnecting — every single ti
 BudSwitch does it for you. Press play on your Mac and your buds come to you. Walk away and
 it frees them, so your phone can take them back — [one routine on the
 phone](#make-it-work-both-ways) makes that automatic too.
+
+For **Galaxy Buds** it is also a full control panel: per-bud battery, noise control,
+equaliser, touch controls and find-my — built on
+[vedatkilic/galaxy-buds-mac](https://github.com/vedatkilic/galaxy-buds-mac).
 
 <div align="center">
 <img src="docs/images/panel-mac.png" width="300" alt="BudSwitch panel with buds connected to the Mac">
@@ -92,21 +97,18 @@ pair them for you.
 | Mac sleeps or locks | Buds released immediately |
 | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌘</kbd><kbd>B</kbd> from anywhere | Toggle, always wins |
 
-<table>
-<tr>
-<td width="50%" align="center">
-<img src="docs/images/panel-phone.png" width="290" alt="Buds on the phone">
-<br><em>Buds are on your phone</em>
-</td>
-<td width="50%" align="center">
-<img src="docs/images/panel-multipoint.png" width="290" alt="Multipoint device connected to both">
-<br><em>Multipoint — connected to both, switches in milliseconds</em>
-</td>
-</tr>
-</table>
+<div align="center">
+<img src="docs/images/panel-phone.png" width="290" alt="Buds released to the phone">
+<br><em>Released — the phone can take them</em>
+</div>
 
-The route line shows which side holds your buds. The menubar icon is filled when they're
-on your Mac, dimmed when they're not.
+The route line shows which side holds your buds, and the button moves them. The menubar
+icon is filled when they're on your Mac, dimmed when they're not.
+
+**On Galaxy Buds** the same panel shows per-bud battery (a bud left in the case reads
+`—`, not 0%), noise control, equaliser presets, and a settings window with touch controls
+and find-my. Those need the data connection, which is separate from the audio one — the
+status dot is green when both are up, yellow when only audio is.
 
 > [!NOTE]
 > **"Send to phone" releases the buds — it can't make your phone grab them.** Connecting
@@ -292,8 +294,8 @@ cd BudSwitch
 ./build.sh && open build/BudSwitch.app
 ```
 
-No Xcode project — `build.sh` drives `swiftc` directly and produces a universal binary.
-`./package.sh dmg` builds the installer.
+No Xcode project — SPM builds it (`Package.swift`) and `build.sh` assembles the universal
+`.app` around the result. `./package.sh dmg` builds the installer.
 
 Every push to `main` and every pull request builds on a macOS runner and checks that the
 binary is universal, the Bluetooth usage description is present, `LSUIElement` is set, and
@@ -313,15 +315,21 @@ git push origin main --tags
 <summary><strong>Project layout</strong></summary>
 
 ```
-BudSwitch/
-  App/         BudSwitchApp (MenuBarExtra entry), AppState
-  Bluetooth/   BluetoothController (connect/disconnect), DeviceStore
-  Monitors/    AudioRouteProbe, AudioMonitor, IdleMonitor,
-               PowerMonitor, AppFocusMonitor
-  Core/        Logger, Arbiter (trigger priority), Hotkey
-  UI/          MenuView, HUD, ShortcutRecorder
+Sources/
+  App/         AppDelegate, StatusBarController, AppState
+  Switching/   AudioRouteProbe, AudioMonitor, IdleMonitor, PowerMonitor,
+               AppFocusMonitor, Arbiter, Hotkey, BluetoothController
+  Bluetooth/   BluetoothManager (SPP), SppMessage, MessageId, MultipointInfo
+  Models/      BudsStatus, BudsModel, NoiseControlMode, EqualizerPreset
+  Views/       MenuPopoverView, DashboardView, SoundAncView, WizardView, …
+  UI/          HUD, ShortcutRecorder
+  Resources/   localisations
 Resources/     Info.plist, AppIcon.icns, makeicon.swift
 ```
+
+`Switching/` is BudSwitch's own engine; `Bluetooth/`, `Models/` and `Views/` come from
+[galaxy-buds-mac](https://github.com/vedatkilic/galaxy-buds-mac) (MIT, see
+`LICENSE-galaxy-buds-mac`).
 
 Every state transition is logged. Use `log stream` — `log show` lags by minutes and will
 convince you things are broken when they aren't:

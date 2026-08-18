@@ -22,9 +22,45 @@ enum BluetoothController {
     /// Pause *after* each attempt. Three attempts total; the last has no trailing wait.
     private static let retryDelays: [TimeInterval] = [0.5, 1.0, 0]
 
-    /// Page timeout in Bluetooth slots of 0.625ms. 4096 ≈ 2.56s per attempt, so three
-    /// attempts plus backoff stay under ~10s rather than running past 30s.
+    /// Page timeout in Bluetooth slots of 0.625ms. Requested, but macOS does not honour
+    /// it — see `openWithDeadline`.
     private static let pageTimeout: BluetoothHCIPageTimeout = 4096
+
+    /// How long to wait for a connect before giving up on it.
+    ///
+    /// Successful connects measured 6–9s on Buds4 Pro, so this has to clear that. Failures
+    /// block a flat 20s, which is what made the UI look frozen.
+    private static let connectDeadline: TimeInterval = 12
+
+    /// Runs `openConnection` and returns as soon as the earbuds are *actually usable*.
+    ///
+    /// Two things made this necessary. macOS ignores the page timeout we request, so the
+    /// call itself blocks 2–20s. And the call returning is the wrong signal anyway: the
+    /// audio route often flips to the earbuds seconds before `openConnection` returns —
+    /// observed returning `kIOReturnTimeout` at 12s on a connection that had already
+    /// succeeded at 10s, so a perfectly good switch was reported as "buds didn't respond".
+    ///
+    /// So poll the route while the call runs and finish the moment audio lands. The
+    /// blocking call is left to complete on its own thread; an in-flight HCI request
+    /// cannot be cancelled, and letting it finish is harmless.
+    private static func openWithDeadline(_ device: IOBluetoothDevice, address: String) -> IOReturn {
+        let semaphore = DispatchSemaphore(value: 0)
+        var result = kIOReturnTimeout
+        Thread.detachNewThread {
+            result = device.openConnection(nil, withPageTimeout: pageTimeout, authenticationRequired: false)
+            semaphore.signal()
+        }
+
+        let deadline = Date().addingTimeInterval(connectDeadline)
+        while Date() < deadline {
+            // The route is the thing the user cares about — once audio is on the earbuds
+            // the switch is done, whatever the call is still doing.
+            if AudioRouteProbe.isRoutedToDevice(address: address) { return kIOReturnSuccess }
+            if semaphore.wait(timeout: .now() + 0.15) == .success { return result }
+        }
+        // One last look: the route may have landed inside the final poll gap.
+        return AudioRouteProbe.isRoutedToDevice(address: address) ? kIOReturnSuccess : kIOReturnTimeout
+    }
 
     /// Cached device objects, keyed by address.
     ///
@@ -178,13 +214,16 @@ enum BluetoothController {
             var attempt = 0
             for delay in Self.retryDelays {
                 attempt += 1
-                // Bounded page timeout rather than bare openConnection(). The default can
-                // block well past 10s per attempt, and with retries that leaves the queue
-                // — and the UI's "Connecting…" — stuck for over half a minute when the
-                // buds are simply out of range or held by the phone.
-                rawResult = expectRouted
-                    ? device.openConnection(nil, withPageTimeout: Self.pageTimeout, authenticationRequired: false)
-                    : device.closeConnection()
+                // macOS ignores the page timeout we ask for: measured connects block
+                // 6–9s on success and a flat 20s on failure. Run the call on its own
+                // thread and stop waiting after `connectDeadline`, so an unreachable
+                // device costs seconds rather than twenty. The call itself keeps running
+                // and is harmless — we simply stop blocking the queue on it.
+                if expectRouted {
+                    rawResult = Self.openWithDeadline(device, address: address)
+                } else {
+                    rawResult = device.closeConnection()
+                }
 
                 // An already-open link reports as an error; that's still a win.
                 if rawResult == kIOReturnSuccess { break }
@@ -242,7 +281,11 @@ enum BluetoothController {
             // satisfied by our own speaker fallback, reporting success while the buds stay
             // held by this Mac.
             let confirmation = expectRouted
-                ? AudioRouteProbe.waitForRoute(address: address, expected: true)
+                // A2DP can take several seconds to follow the baseband link — measured
+                // 5.9s after openConnection returned success. Too short a window here
+                // reports a working connect as "baseband only (no audio)", so allow for
+                // the slow case rather than the typical one.
+                ? AudioRouteProbe.waitForRoute(address: address, expected: true, timeout: 8.0)
                 // Shorter than the connect wait: the release is confirmed by the route
                 // check below if the link lingers, so there is no need to block for 5s.
                 : AudioRouteProbe.waitForLinkDrop(address: address, timeout: 2.0)
