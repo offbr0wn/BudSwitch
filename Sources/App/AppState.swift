@@ -70,6 +70,10 @@ final class AppState: ObservableObject {
         didSet {
             UserDefaults.standard.set(isAutomationEnabled, forKey: "automationEnabled")
             Log.app.log("automation \(self.isAutomationEnabled ? "enabled" : "disabled", privacy: .public)")
+            // "Every automatic trigger" has to include the Galaxy Buds background poll,
+            // which lives outside this type and would otherwise keep connecting with the
+            // toggle visibly off.
+            BluetoothManager.automationEnabled = isAutomationEnabled
         }
     }
 
@@ -81,24 +85,17 @@ final class AppState: ObservableObject {
     /// the automation is actually watching, rather than looking inert.
     @Published private(set) var isPlaying = false
 
-    /// When the earbuds were last handed to the phone, by you or by automation.
+    /// Set while the earbuds are away on another device.
     ///
-    /// After a deliberate handoff they are presumably in use over there, so automatic
-    /// playback should not claim them straight back. The hotkey and the panel button are
-    /// unaffected — an explicit request always wins.
+    /// Its only job is to veto the Galaxy Buds background poll, which would otherwise
+    /// reclaim them with nothing on this Mac asking for audio. Playback, the hotkey and
+    /// the panel button all still connect immediately — they are real requests.
     private var lastReleasedAt: Date? {
         didSet {
             // The Galaxy Buds layer polls its own auto-connect every 2s and would
             // otherwise reclaim the earbuds regardless of anything decided here.
             BluetoothManager.isParkedOnPhone = lastReleasedAt != nil
         }
-    }
-
-    /// How long after a release automatic playback stays hands-off.
-    ///   defaults write com.budswitch.mac reclaimGraceMinutes -int 10
-    private var reclaimGrace: TimeInterval {
-        let minutes = UserDefaults.standard.object(forKey: "reclaimGraceMinutes") as? Int ?? 5
-        return TimeInterval(max(0, min(minutes, 120)) * 60)
     }
 
     private var arbiter = Arbiter()
@@ -242,18 +239,6 @@ final class AppState: ObservableObject {
         guard gate.allowed else {
             note("ignored playback — \(gate.reason)")
             return
-        }
-
-        // Do not take the earbuds back just because the Mac made a sound: they were
-        // handed to the phone on purpose and are probably being listened to there.
-        if let released = lastReleasedAt {
-            if Date().timeIntervalSince(released) < reclaimGrace {
-                let mins = Int(reclaimGrace / 60)
-                note("left on your phone — press \(hotkeyDisplay) to take them back (\(mins) min)")
-                return
-            }
-            // Grace has lapsed: stop parking so normal auto-connect resumes.
-            lastReleasedAt = nil
         }
 
         let verdict = arbiter.permits(.playback)
@@ -421,6 +406,14 @@ final class AppState: ObservableObject {
         isLinkedButIdle = !routed && AudioRouteProbe.outputDevice(forAddress: address) != nil
         if routed != isRouted {
             Log.audio.log("route changed: \(address, privacy: .public) routed=\(routed, privacy: .public)")
+            // The earbuds can leave without BudSwitch releasing them — a phone routine
+            // claims them, or you pick them there by hand. Park them just the same, or
+            // the background poll reclaims them within seconds and nothing on this Mac
+            // asked for them.
+            if !routed, lastReleasedAt == nil {
+                lastReleasedAt = Date()
+                note("left for another device")
+            }
         }
         isRouted = routed
     }

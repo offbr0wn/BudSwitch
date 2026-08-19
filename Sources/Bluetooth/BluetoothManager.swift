@@ -280,10 +280,15 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
     /// connect succeeds and steals them mid-listen, so the handoff has to veto it.
     nonisolated(unsafe) static var isParkedOnPhone = false
 
+    /// Mirrors AppState's "Switch automatically" toggle. Seeded from the same default so
+    /// launching with it already off is honoured before AppState's didSet ever fires.
+    nonisolated(unsafe) static var automationEnabled =
+        UserDefaults.standard.object(forKey: "automationEnabled") as? Bool ?? true
+
     func pollAutoConnect() {
         guard autoConnectArmed, bluetoothReady, !isConnected,
               rfcommChannel == nil, !isConnecting, !suppressAutoConnect,
-              !Self.isParkedOnPhone else {
+              !Self.isParkedOnPhone, Self.automationEnabled else {
             return
         }
         // IOBluetooth `isConnected()` is unreliable for these buds (returns false
