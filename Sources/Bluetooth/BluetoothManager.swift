@@ -272,9 +272,18 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
     /// Polled (~every 2s) by the app: connects to an already-connected paired
     /// Galaxy Buds. More reliable than IOBluetooth connect notifications, which
     /// don't fire dependably on all macOS versions.
+    /// Set while the earbuds are deliberately parked on the phone.
+    ///
+    /// This poll opens a real Bluetooth connection, which *takes* the earbuds from
+    /// whatever else is holding them — the comment below about failing quietly only
+    /// holds when they are genuinely away. With the earbuds live on a phone the
+    /// connect succeeds and steals them mid-listen, so the handoff has to veto it.
+    nonisolated(unsafe) static var isParkedOnPhone = false
+
     func pollAutoConnect() {
         guard autoConnectArmed, bluetoothReady, !isConnected,
-              rfcommChannel == nil, !isConnecting, !suppressAutoConnect else {
+              rfcommChannel == nil, !isConnecting, !suppressAutoConnect,
+              !Self.isParkedOnPhone else {
             return
         }
         // IOBluetooth `isConnected()` is unreliable for these buds (returns false

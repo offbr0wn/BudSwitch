@@ -86,7 +86,13 @@ final class AppState: ObservableObject {
     /// After a deliberate handoff they are presumably in use over there, so automatic
     /// playback should not claim them straight back. The hotkey and the panel button are
     /// unaffected — an explicit request always wins.
-    private var lastReleasedAt: Date?
+    private var lastReleasedAt: Date? {
+        didSet {
+            // The Galaxy Buds layer polls its own auto-connect every 2s and would
+            // otherwise reclaim the earbuds regardless of anything decided here.
+            BluetoothManager.isParkedOnPhone = lastReleasedAt != nil
+        }
+    }
 
     /// How long after a release automatic playback stays hands-off.
     ///   defaults write com.budswitch.mac reclaimGraceMinutes -int 10
@@ -240,10 +246,14 @@ final class AppState: ObservableObject {
 
         // Do not take the earbuds back just because the Mac made a sound: they were
         // handed to the phone on purpose and are probably being listened to there.
-        if let released = lastReleasedAt, Date().timeIntervalSince(released) < reclaimGrace {
-            let mins = Int(reclaimGrace / 60)
-            note("left on your phone — press \(hotkeyDisplay) to take them back (\(mins) min)")
-            return
+        if let released = lastReleasedAt {
+            if Date().timeIntervalSince(released) < reclaimGrace {
+                let mins = Int(reclaimGrace / 60)
+                note("left on your phone — press \(hotkeyDisplay) to take them back (\(mins) min)")
+                return
+            }
+            // Grace has lapsed: stop parking so normal auto-connect resumes.
+            lastReleasedAt = nil
         }
 
         let verdict = arbiter.permits(.playback)
@@ -453,6 +463,9 @@ final class AppState: ObservableObject {
     // MARK: - Actions
 
     func connect() {
+        // Whatever brought us here — hotkey, panel, playback — the earbuds are wanted
+        // on this Mac now, so they are no longer parked on the phone.
+        lastReleasedAt = nil
         run { address, done in BluetoothController.connect(address: address, completion: done) }
     }
 
