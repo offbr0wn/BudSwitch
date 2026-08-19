@@ -175,36 +175,9 @@ struct MenuPopoverView: View {
 
             quickConnect
 
-            if bluetooth.isConnected {
-                HStack(spacing: 28) {
-                    CircularBatteryGauge(level: bluetooth.status.batteryLeft, label: "Left",
-                     present: bluetooth.status.batteryLeft > 0 && bluetooth.status.placementLeft != .inCase && bluetooth.status.placementLeft != .inClosedCase,
-                     diameter: 76)
-                    CircularBatteryGauge(level: bluetooth.status.batteryRight, label: "Right",
-                     present: bluetooth.status.batteryRight > 0 && bluetooth.status.placementRight != .inCase && bluetooth.status.placementRight != .inClosedCase,
-                     diameter: 76)
-                }
-            } else {
-                // Audio is routing but the SPP channel is not open, so there is no
-                // battery or ANC data to show. Offer the action rather than empty dials.
-                VStack(spacing: 6) {
-                    Text("Battery and controls need a data connection")
-                        .font(.caption).foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                    Button("Connect") { bluetooth.startAutoConnect() }
-                        .controlSize(.small)
-                }
-            }
-
-            if bluetooth.connectedModel?.supportsANC == true {
-                listenMode
-                if bluetooth.status.noiseControlMode == .anc {
-                    ancStrength
-                }
-            }
-
-            equalizerRow
-
+            // Battery, ANC and EQ deliberately live in the detail window rather than
+            // here. This panel exists to answer "where are my earbuds" and move them;
+            // stacking the full dashboard under that buried the one control it is for.
             Button(action: openDetail) {
                 HStack(spacing: 6) {
                     Image(systemName: "gearshape")
@@ -213,70 +186,6 @@ struct MenuPopoverView: View {
                 .frame(maxWidth: .infinity)
             }
             .controlSize(.large)
-        }
-    }
-
-    private var listenMode: some View {
-        let modes: [NoiseControlMode] =
-            bluetooth.connectedModel?.supportsAdaptiveANC == true
-            ? [.off, .ambient, .adaptive, .anc]
-            : [.off, .ambient, .anc]
-        return HStack(spacing: 2) {
-            ForEach(modes) { mode in
-                let selected = bluetooth.status.noiseControlMode == mode
-                Button(action: { bluetooth.setNoiseControl(mode) }) {
-                    VStack(spacing: 3) {
-                        Image(systemName: mode.iconName).font(.system(size: 15))
-                        Text(LocalizedStringKey(mode.shortName)).font(.system(size: 9))
-                    }
-                    .foregroundStyle(selected ? tint : Color.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(selected ? Color(nsColor: .controlBackgroundColor) : .clear)
-                            .shadow(color: selected ? .black.opacity(0.12) : .clear, radius: 1, y: 0.5)
-                    )
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(3)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.secondary.opacity(0.12)))
-    }
-
-    private var ancStrength: some View {
-        HStack(spacing: 10) {
-            Text("ANC strength").font(.system(size: 11)).foregroundStyle(.secondary)
-            Text("Low").font(.system(size: 10)).foregroundStyle(.secondary)
-            Slider(value: Binding(
-                get: { bluetooth.status.ancLevelHigh ? 1.0 : 0.0 },
-                set: { bluetooth.setAncLevelHigh($0 >= 0.5) }
-            ), in: 0...1, step: 1)
-            Text("High").font(.system(size: 10)).foregroundStyle(.secondary)
-        }
-    }
-
-    private var equalizerRow: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "slider.horizontal.3").font(.system(size: 13)).foregroundStyle(.secondary)
-            Text("Equalizer").font(.system(size: 12)).foregroundStyle(.secondary)
-            Spacer()
-            Menu {
-                ForEach(EqualizerPreset.allCases) { preset in
-                    Button { bluetooth.setEqualizer(preset) } label: {
-                        Text(LocalizedStringKey(preset.displayName))
-                    }
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Text(LocalizedStringKey(bluetooth.status.equalizerPreset.displayName))
-                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10))
-                }
-                .font(.system(size: 12))
-                .foregroundStyle(.primary)
-            }
-            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
         }
     }
 
