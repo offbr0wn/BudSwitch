@@ -126,10 +126,22 @@ final class AudioMonitor {
     // MARK: - Evaluation
 
     /// True when any physical output is playing.
+    /// True when the *current default output* is playing.
+    ///
+    /// Deliberately not "any output is playing". Once the earbuds leave for the phone,
+    /// macOS falls back to the built-in speakers — and a video resuming there counted as
+    /// playback, so the Mac grabbed the earbuds back while they were in use on the phone.
+    ///
+    /// If the default output is a virtual device (Background Music, Teams), fall back to
+    /// the physical outputs behind it, since the virtual device proxies them.
     private var isPlayingNow: Bool {
-        AudioRouteProbe.outputDevices()
-            .filter { !$0.isVirtual }
-            .contains(\.isRunningSomewhere)
+        guard let output = AudioRouteProbe.defaultOutputDevice() else { return false }
+        if output.isVirtual {
+            return AudioRouteProbe.outputDevices()
+                .filter { !$0.isVirtual }
+                .contains(\.isRunningSomewhere)
+        }
+        return output.isRunningSomewhere
     }
 
     private func evaluate() {

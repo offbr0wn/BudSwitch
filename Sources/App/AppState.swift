@@ -81,6 +81,20 @@ final class AppState: ObservableObject {
     /// the automation is actually watching, rather than looking inert.
     @Published private(set) var isPlaying = false
 
+    /// When the earbuds were last handed to the phone, by you or by automation.
+    ///
+    /// After a deliberate handoff they are presumably in use over there, so automatic
+    /// playback should not claim them straight back. The hotkey and the panel button are
+    /// unaffected — an explicit request always wins.
+    private var lastReleasedAt: Date?
+
+    /// How long after a release automatic playback stays hands-off.
+    ///   defaults write com.budswitch.mac reclaimGraceMinutes -int 10
+    private var reclaimGrace: TimeInterval {
+        let minutes = UserDefaults.standard.object(forKey: "reclaimGraceMinutes") as? Int ?? 5
+        return TimeInterval(max(0, min(minutes, 120)) * 60)
+    }
+
     private var arbiter = Arbiter()
     private var audioMonitor: AudioMonitor?
     private var idleMonitor: IdleMonitor?
@@ -224,6 +238,14 @@ final class AppState: ObservableObject {
             return
         }
 
+        // Do not take the earbuds back just because the Mac made a sound: they were
+        // handed to the phone on purpose and are probably being listened to there.
+        if let released = lastReleasedAt, Date().timeIntervalSince(released) < reclaimGrace {
+            let mins = Int(reclaimGrace / 60)
+            note("left on your phone — press \(hotkeyDisplay) to take them back (\(mins) min)")
+            return
+        }
+
         let verdict = arbiter.permits(.playback)
         guard verdict.allowed else {
             note("ignored playback — \(verdict.reason)")
@@ -259,6 +281,7 @@ final class AppState: ObservableObject {
         }
 
         note("releasing — \(reason)")
+        lastReleasedAt = Date()
         arbiter.didSwitch(trigger)
         disconnect()
     }
@@ -476,6 +499,9 @@ final class AppState: ObservableObject {
         }
 
         arbiter.didSwitch(.manual)
+        // Sending them away arms the grace period; asking for them back clears it, since
+        // you have just said where you want them. An explicit request always wins.
+        lastReleasedAt = isRouted ? Date() : nil
         note(isRouted ? "released by you" : "connected by you")
         isRouted ? disconnect() : connect()
     }
