@@ -90,6 +90,19 @@ final class AppState: ObservableObject {
     /// Its only job is to veto the Galaxy Buds background poll, which would otherwise
     /// reclaim them with nothing on this Mac asking for audio. Playback, the hotkey and
     /// the panel button all still connect immediately — they are real requests.
+    /// When the earbuds last became free, so playback can be judged as new or pre-existing.
+    ///
+    /// Cleared once claimed, so a single release grants one window rather than leaving
+    /// the Mac permanently eligible to reclaim them.
+    private var budsBecameFreeAt: Date?
+
+    /// How long after the earbuds are freed a playback start still counts as "fresh".
+    ///   defaults write com.budswitch.mac freshAudioSeconds -int 8
+    private static var freshAudioWindow: TimeInterval {
+        let seconds = UserDefaults.standard.object(forKey: "freshAudioSeconds") as? Int ?? 4
+        return TimeInterval(max(1, min(seconds, 60)))
+    }
+
     private var lastReleasedAt: Date? {
         didSet {
             // The Galaxy Buds layer polls its own auto-connect every 2s and would
@@ -241,6 +254,19 @@ final class AppState: ObservableObject {
             return
         }
 
+        // Require audio that started *after* the earbuds became free.
+        //
+        // Browsers hold their output stream open across a pause — verified on Brave,
+        // whose process reports running output permanently once any tab has played. So
+        // the moment the earbuds leave, a paused Mac video still reads as "playing" and
+        // pulled them straight back off the phone. There is no CoreAudio property that
+        // separates playing from paused, so use timing instead: audio already under way
+        // when the earbuds were released is not a request for them.
+        if let freed = budsBecameFreeAt, Date().timeIntervalSince(freed) > Self.freshAudioWindow {
+            note("ignored playback — already playing when the earbuds left")
+            return
+        }
+
         let verdict = arbiter.permits(.playback)
         guard verdict.allowed else {
             note("ignored playback — \(verdict.reason)")
@@ -277,6 +303,7 @@ final class AppState: ObservableObject {
 
         note("releasing — \(reason)")
         lastReleasedAt = Date()
+        budsBecameFreeAt = Date()
         arbiter.didSwitch(trigger)
         disconnect()
     }
@@ -410,9 +437,13 @@ final class AppState: ObservableObject {
             // claims them, or you pick them there by hand. Park them just the same, or
             // the background poll reclaims them within seconds and nothing on this Mac
             // asked for them.
-            if !routed, lastReleasedAt == nil {
-                lastReleasedAt = Date()
-                note("left for another device")
+            if !routed {
+                // Starts the window in which newly-started audio may claim them.
+                budsBecameFreeAt = Date()
+                if lastReleasedAt == nil {
+                    lastReleasedAt = Date()
+                    note("left for another device")
+                }
             }
         }
         isRouted = routed
@@ -459,6 +490,7 @@ final class AppState: ObservableObject {
         // Whatever brought us here — hotkey, panel, playback — the earbuds are wanted
         // on this Mac now, so they are no longer parked on the phone.
         lastReleasedAt = nil
+        budsBecameFreeAt = nil
         run { address, done in BluetoothController.connect(address: address, completion: done) }
     }
 
