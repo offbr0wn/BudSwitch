@@ -46,9 +46,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         bluetooth.onBluetoothReady = { [weak state] in state?.startWhenBluetoothReady() }
         let controller = StatusBarController(bluetooth: bluetooth, switching: state)
         statusBarController = controller
-        // Pop the panel up when the buds connect while we're running — an
-        // AirPods-like appearance.
-        bluetooth.onAutoConnected = { [weak controller] in controller?.showPanel() }
+        // Deliberately no panel on auto-connect. It fired on every reconnect — including
+        // the automatic ones this app performs itself — and stole focus mid-task. The
+        // menubar icon already switches to the connected glyph with the battery level,
+        // which is the whole message without a window appearing over your work.
         // Prime permission and auto-connect to an already-connected Galaxy Buds.
         bluetooth.startAutoConnect()
 
