@@ -1,60 +1,164 @@
 import AppKit
 import CoreAudio
 import Foundation
+import IOKit.pwr_mgt
 
-/// Which applications are *actually* emitting audio right now.
+/// Which applications are *audibly playing* right now.
 ///
-/// `AppFocusMonitor` could only ask whether an allowlisted app was running, which a
-/// browser always is — so any sound at all, from any app, passed the gate. macOS 14.4
-/// added a process-level audio API that answers the real question, so the earbuds come
-/// back for a video in Brave and not for a notification chime.
+/// Two signals, because neither is enough alone:
+///
+/// - **Output streams** (CoreAudio's process objects, macOS 14.2+) say which apps hold an
+///   open stream. That is not the same as making sound: measured on Chromium, the stream
+///   outlives a pause by about eight seconds, and a tab with a live `AudioContext` holds
+///   one indefinitely. Used as a trigger, that pulled the earbuds back for paused video.
+/// - **Media power assertions.** Chromium browsers hold an assertion named
+///   "Playing audio" exactly while a tab is audible. Measured: it appears with playback
+///   and is gone about a second after pausing. That is the play/pause signal.
+///
+/// So an app counts as playing when it holds a stream *and*, if it is an app that
+/// publishes the assertion, the assertion is present. Apps that never publish one fall
+/// back to the stream alone, which is the best the OS offers for them.
 enum AudioSourceProbe {
 
-    /// Bundle IDs of every app currently playing to an output device.
-    ///
-    /// Empty is meaningful only alongside `isSupported`: on an OS without the process
-    /// API it is empty because nothing can be known, not because nothing is playing.
+    /// Bundle IDs of every app audibly playing right now.
     static func playingBundleIDs() -> Set<String> {
-        var pids = Set<pid_t>()
-        for object in processObjects() where isRunningOutput(object) {
-            if let pid = processPID(object) { pids.insert(pid) }
-        }
-        guard !pids.isEmpty else { return [] }
+        guard isSupported else { return legacyPlaying() }
 
-        // Audio is usually emitted by a helper process (Brave's renderer, for one), so
-        // map back through the running-application list, which reports the parent app's
-        // bundle ID for its helpers.
-        var bundles = Set<String>()
-        for app in NSWorkspace.shared.runningApplications {
-            guard let bundle = app.bundleIdentifier else { continue }
-            if pids.contains(app.processIdentifier) { bundles.insert(bundle) }
+        let streams = streamBundleIDs()
+        let audible = audibleBundleIDs()
+
+        lock.lock()
+        // Any app seen publishing the assertion is held to it from then on, which
+        // extends the rule to Chromium apps missing from the built-in list.
+        publishesAudibility.formUnion(audible)
+        let known = publishesAudibility
+        lock.unlock()
+
+        return streams.filter { bundle in
+            let publishes = known.contains(bundle)
+                || audibilityPublishers.contains { bundle == $0 || bundle.hasPrefix($0 + ".") }
+            return !publishes || audible.contains(bundle)
         }
-        // Helpers that are not themselves NSRunningApplications: resolve via the
-        // executable path, which still carries the parent bundle for XPC helpers.
-        for pid in pids where !bundles.contains(where: { _ in false }) {
-            if let bundle = bundleID(forHelperPID: pid) { bundles.insert(bundle) }
+    }
+
+    /// Stands in for "some app" on an OS with no per-process audio API.
+    static let unknownSource = "*"
+
+    /// Whether this OS exposes per-process audio state at all.
+    static let isSupported: Bool = {
+        var address = processListAddress
+        var size: UInt32 = 0
+        return AudioObjectGetPropertyDataSize(
+            AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size) == noErr
+    }()
+
+    // MARK: - Signal 1: output streams
+
+    /// Apps holding an open output stream. Open, not necessarily audible.
+    static func streamBundleIDs() -> Set<String> {
+        var bundles = Set<String>()
+        for object in processObjects() where isRunningOutput(object) {
+            guard let pid = processPID(object) else { continue }
+            if let bundle = owningBundleID(pid: pid) ?? processBundleID(object) {
+                bundles.insert(bundle)
+            }
         }
         return bundles
     }
 
-    /// Whether this OS exposes per-process audio state at all.
-    static var isSupported: Bool {
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyProcessObjectList,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain)
-        var size: UInt32 = 0
-        return AudioObjectGetPropertyDataSize(
-            AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size) == noErr
+    // MARK: - Signal 2: audibility assertions
+
+    /// Assertion names that mean "this app is audibly playing media".
+    private static let audibleAssertionNames: Set<String> = ["Playing audio"]
+
+    /// Apps known to publish that assertion, so they are held to it from the first
+    /// sample rather than only after it has been observed once.
+    private static let audibilityPublishers: Set<String> = [
+        "com.brave.Browser",
+        "com.google.Chrome",
+        "com.microsoft.edgemac",
+        "company.thebrowser.Browser",
+        "com.vivaldi.Vivaldi",
+        "com.operasoftware.Opera",
+        "org.chromium.Chromium",
+    ]
+
+    private static let lock = NSLock()
+    private static var publishesAudibility = Set<String>()
+
+    /// Apps currently holding an audibility assertion.
+    static func audibleBundleIDs() -> Set<String> {
+        var unmanaged: Unmanaged<CFDictionary>?
+        guard IOPMCopyAssertionsByProcess(&unmanaged) == kIOReturnSuccess,
+              let byProcess = unmanaged?.takeRetainedValue() as? [NSNumber: [[String: Any]]]
+        else { return [] }
+
+        var bundles = Set<String>()
+        for (pid, assertions) in byProcess {
+            let audible = assertions.contains {
+                guard let name = $0[kIOPMAssertionNameKey] as? String else { return false }
+                return audibleAssertionNames.contains(name)
+            }
+            guard audible, let bundle = owningBundleID(pid: pid.int32Value) else { continue }
+            bundles.insert(bundle)
+        }
+        return bundles
+    }
+
+    // MARK: - Process → app
+
+    /// The app a process belongs to.
+    ///
+    /// Browsers play through helper processes nested inside the main bundle, so this
+    /// walks to the *outermost* .app: "Brave Browser Helper" resolves to
+    /// com.brave.Browser, the ID the user actually allowlists, and the stream and the
+    /// assertion — held by different processes of the same app — land on the same key.
+    private static func owningBundleID(pid: pid_t) -> String? {
+        lock.lock()
+        let cached = bundleCache[pid]
+        lock.unlock()
+        if let cached { return cached.isEmpty ? nil : cached }
+
+        var buffer = [CChar](repeating: 0, count: 4 * 1024)
+        var resolved: String?
+        if proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0 {
+            let components = URL(fileURLWithPath: String(cString: buffer)).pathComponents
+            if let index = components.firstIndex(where: { $0.hasSuffix(".app") }) {
+                let path = NSString.path(withComponents: Array(components[...index]))
+                resolved = Bundle(path: path)?.bundleIdentifier
+            }
+        }
+
+        lock.lock()
+        // Bounded: PIDs are recycled, and a stale entry would attribute a new process
+        // to whatever app owned the number before.
+        if bundleCache.count > 512 { bundleCache.removeAll() }
+        bundleCache[pid] = resolved ?? ""
+        lock.unlock()
+        return resolved
+    }
+
+    private static var bundleCache: [pid_t: String] = [:]
+
+    /// Drops cached attributions. Called periodically so a recycled PID cannot keep a
+    /// dead app's identity for long.
+    static func resetAttributionCache() {
+        lock.lock()
+        bundleCache.removeAll()
+        lock.unlock()
     }
 
     // MARK: - CoreAudio plumbing
 
-    private static func processObjects() -> [AudioObjectID] {
-        var address = AudioObjectPropertyAddress(
+    private static var processListAddress: AudioObjectPropertyAddress {
+        AudioObjectPropertyAddress(
             mSelector: kAudioHardwarePropertyProcessObjectList,
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMain)
+    }
+
+    private static func processObjects() -> [AudioObjectID] {
+        var address = processListAddress
         var size: UInt32 = 0
         guard AudioObjectGetPropertyDataSize(
             AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size) == noErr,
@@ -65,7 +169,8 @@ enum AudioSourceProbe {
         guard AudioObjectGetPropertyData(
             AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &ids) == noErr
         else { return [] }
-        return ids
+        // The list can shrink between the size query and the read.
+        return Array(ids.prefix(Int(size) / MemoryLayout<AudioObjectID>.size))
     }
 
     private static func isRunningOutput(_ object: AudioObjectID) -> Bool {
@@ -92,20 +197,29 @@ enum AudioSourceProbe {
         return pid
     }
 
-    /// Bundle ID for a helper process that is not itself an NSRunningApplication.
-    ///
-    /// Helper executables live inside the parent bundle, so walking up from the
-    /// executable path to the enclosing .app recovers the owner.
-    private static func bundleID(forHelperPID pid: pid_t) -> String? {
-        var pathBuffer = [CChar](repeating: 0, count: 4 * 1024)
-        guard proc_pidpath(pid, &pathBuffer, UInt32(pathBuffer.count)) > 0 else { return nil }
-        var url = URL(fileURLWithPath: String(cString: pathBuffer))
-        while url.pathComponents.count > 1 {
-            url.deleteLastPathComponent()
-            if url.pathExtension == "app" {
-                return Bundle(url: url)?.bundleIdentifier
-            }
-        }
-        return nil
+    /// CoreAudio's own idea of the process's bundle ID. Used only when the executable
+    /// is not inside an .app at all, such as a system XPC service.
+    private static func processBundleID(_ object: AudioObjectID) -> String? {
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioProcessPropertyBundleID,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain)
+        var value: Unmanaged<CFString>?
+        var size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
+        guard AudioObjectGetPropertyData(object, &address, 0, nil, &size, &value) == noErr,
+              let string = value?.takeRetainedValue() as String?, !string.isEmpty
+        else { return nil }
+        return string
+    }
+
+    // MARK: - Older macOS
+
+    /// Without the process API all that can be known is whether the output is running.
+    private static func legacyPlaying() -> Set<String> {
+        guard let output = AudioRouteProbe.defaultOutputDevice() else { return [] }
+        let running = output.isVirtual
+            ? AudioRouteProbe.outputDevices().contains { !$0.isVirtual && $0.isRunningSomewhere }
+            : output.isRunningSomewhere
+        return running ? [unknownSource] : []
     }
 }

@@ -47,7 +47,6 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
     private var autoConnectArmed = false
     private var connectNotification: IOBluetoothUserNotification?
     private var autoConnectShouldNotify = false
-    private var suppressAutoConnect = false
     private var lastAutoAttempt: Date?
     private let autoConnectCooldown: TimeInterval = 15
     /// While true, connection failures don't surface an error (auto-connect
@@ -106,7 +105,9 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
         guard bluetoothReady, !isConnected, rfcommChannel == nil, !isConnecting else { return }
         guard let paired = IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] else { return }
 
-        let candidates = paired.filter { $0.isConnected() && isGalaxyBudsName($0.name ?? "") }
+        let candidates = paired.filter {
+            isGalaxyBudsName($0.name ?? "") && Self.isPresentOnThisMac($0)
+        }
 
         // Prefer whatever BudSwitch is set to manage. Without this the first connected
         // device with "buds" in its name wins — which matched "Arctis GameBuds" and made
@@ -191,6 +192,9 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
 
         let target = device.device
         let uuidString = model.serviceUUID
+        // Only a connect the user asked for may bring the link up. An automatic one is
+        // there to read battery and ANC from earbuds that are already here.
+        let mayOpenLink = !silent
 
         // Resolve the RFCOMM channel off the main thread: this ensures the
         // baseband link is up and performs/polls the SDP query (which can take
@@ -198,8 +202,15 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
         // so its data callbacks bind to the always-pumping main run loop.
         Task.detached(priority: .userInitiated) { [weak self] in
             guard let self else { return }
-            let channelId = self.resolveChannel(target: target, uuidString: uuidString)
+            let channelId = self.resolveChannel(
+                target: target, uuidString: uuidString, mayOpenLink: mayOpenLink)
             await MainActor.run {
+                // The SDP lookup takes seconds. If the earbuds left in that time, opening
+                // the channel now would page them and bring them back.
+                if !mayOpenLink, !Self.isPresentOnThisMac(target) {
+                    self.failConnect(String(localized: "The earbuds are not connected to this Mac."))
+                    return
+                }
                 if let channelId {
                     self.connectViaRFCOMM(device: target, channelId: channelId)
                 } else {
@@ -217,9 +228,10 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
     /// background thread; returns nil if the channel can't be resolved.
     private nonisolated func resolveChannel(
         target: IOBluetoothDevice,
-        uuidString: String
+        uuidString: String,
+        mayOpenLink: Bool
     ) -> BluetoothRFCOMMChannelID? {
-        if !target.isConnected() {
+        if mayOpenLink, !target.isConnected() {
             target.openConnection()
         }
 
@@ -262,45 +274,54 @@ final class BluetoothManager: NSObject, @unchecked Sendable {
         cancelConnectTimeout()
         // Hold off auto-reconnect briefly after a manual disconnect, then allow
         // it again (e.g. the user takes the buds out and puts them back).
-        suppressAutoConnect = true
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(30))
-            self.suppressAutoConnect = false
-        }
+        Self.holdOffAutoConnect(for: 30)
     }
 
-    /// Polled (~every 2s) by the app: connects to an already-connected paired
-    /// Galaxy Buds. More reliable than IOBluetooth connect notifications, which
-    /// don't fire dependably on all macOS versions.
-    /// Set while the earbuds are deliberately parked on the phone.
+    // MARK: - Automatic data channel
+
+    /// Whether the earbuds currently have an audio link to this Mac.
     ///
-    /// This poll opens a real Bluetooth connection, which *takes* the earbuds from
-    /// whatever else is holding them — the comment below about failing quietly only
-    /// holds when they are genuinely away. With the earbuds live on a phone the
-    /// connect succeeds and steals them mid-listen, so the handoff has to veto it.
-    nonisolated(unsafe) static var isParkedOnPhone = false
+    /// This is the rule that keeps the data channel from ever *taking* the earbuds:
+    /// every automatic connect is gated on it. Opening a Bluetooth connection to earbuds
+    /// that are on a phone does not fail — it succeeds, and pulls them off the phone.
+    /// CoreAudio only lists them while a link to this Mac exists, so asking it first
+    /// means the channel follows the earbuds here and never brings them.
+    ///
+    /// IOBluetooth's own `isConnected()` is not used: it is cached and reads false for
+    /// these earbuds even while they are connected.
+    nonisolated static func isPresentOnThisMac(_ device: IOBluetoothDevice) -> Bool {
+        guard let address = device.addressString else { return false }
+        return AudioRouteProbe.outputDevice(forAddress: address) != nil
+    }
 
-    /// Mirrors AppState's "Switch automatically" toggle. Seeded from the same default so
-    /// launching with it already off is honoured before AppState's didSet ever fires.
-    nonisolated(unsafe) static var automationEnabled =
-        UserDefaults.standard.object(forKey: "automationEnabled") as? Bool ?? true
+    /// No automatic connect before this time.
+    private static var holdOffUntil = Date.distantPast
 
+    /// Pauses automatic connects, e.g. while a link is being torn down.
+    static func holdOffAutoConnect(for seconds: TimeInterval) {
+        holdOffUntil = max(holdOffUntil, Date().addingTimeInterval(seconds))
+    }
+
+    /// Polled (~every 2s) by the app: opens the data channel to earbuds that are already
+    /// on this Mac. More reliable than IOBluetooth connect notifications, which don't
+    /// fire dependably on all macOS versions.
     func pollAutoConnect() {
         guard autoConnectArmed, bluetoothReady, !isConnected,
-              rfcommChannel == nil, !isConnecting, !suppressAutoConnect,
-              !Self.isParkedOnPhone, Self.automationEnabled else {
+              rfcommChannel == nil, !isConnecting, Date() >= Self.holdOffUntil else {
             return
         }
-        // IOBluetooth `isConnected()` is unreliable for these buds (returns false
-        // even while connected), so we can't gate on it. Instead, attempt the
-        // connection on a cooldown — it succeeds when the buds are reachable and
-        // fails quietly (silentConnect) when they're away.
         if let last = lastAutoAttempt, Date().timeIntervalSince(last) < autoConnectCooldown {
             return
         }
-        guard let paired = IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice],
-              let device = paired.first(where: { isGalaxyBudsName($0.name ?? "") })
-        else { return }
+        guard let paired = IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] else { return }
+
+        // The earbuds BudSwitch manages come first; otherwise the first Galaxy Buds found
+        // wins, which is not necessarily the pair in use.
+        let selected = DeviceStore.address?.lowercased()
+        let candidates = paired.filter { isGalaxyBudsName($0.name ?? "") }
+        let preferred = candidates.first { ($0.addressString ?? "").lowercased() == selected }
+        guard let device = preferred ?? candidates.first,
+              Self.isPresentOnThisMac(device) else { return }
 
         lastAutoAttempt = Date()
         autoConnectShouldNotify = true

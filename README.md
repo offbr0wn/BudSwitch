@@ -317,7 +317,7 @@ git push origin main --tags
 ```
 Sources/
   App/         AppDelegate, StatusBarController, AppState
-  Switching/   AudioRouteProbe, AudioMonitor, IdleMonitor, PowerMonitor,
+  Switching/   AudioRouteProbe, PlaybackWatcher, AudioSourceProbe, IdleMonitor, PowerMonitor,
                AppFocusMonitor, Arbiter, Hotkey, BluetoothController
   Bluetooth/   BluetoothManager (SPP), SppMessage, MessageId, MultipointInfo
   Models/      BudsStatus, BudsModel, NoiseControlMode, EqualizerPreset

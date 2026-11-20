@@ -1,12 +1,7 @@
 import AppKit
 import Foundation
 
-/// Decides whether the app currently making sound is one you want the buds for.
-///
-/// macOS gives no public API for "which app is emitting audio", so this approximates it
-/// with the running-application set: if an allowlisted app is running, audio starting is
-/// attributed to it. That is deliberately permissive — the alternative, using only the
-/// frontmost app, breaks the common case of music playing while you work elsewhere.
+/// Decides whether an app that started playing is one you want the earbuds for.
 enum AppFocusMonitor {
 
     /// Bundle IDs that may pull the buds to the Mac. Brave is the primary one here;
@@ -38,49 +33,36 @@ enum AppFocusMonitor {
         UserDefaults.standard.object(forKey: "allowlistEnabled") as? Bool ?? true
     }
 
-    /// Whether a bundle ID is allowlisted, including a browser's audio helper.
+    /// Whether audio starting in this app may bring the earbuds to the Mac.
     ///
-    /// Browsers emit sound from helper processes whose bundle ID extends the parent's
-    /// ("com.brave.Browser.helper"), so an exact-match test would reject the very case
-    /// this gate exists to allow.
+    /// The app is the one actually making the sound (see `AudioSourceProbe`), not merely
+    /// one that happens to be running — a browser always is, so that test let any sound
+    /// on the Mac through.
+    static func permits(bundle: String) -> Bool {
+        guard isEnabled else { return true }
+
+        // Older macOS cannot say which app is playing; fall back to asking whether an
+        // allowlisted app is running at all.
+        if bundle == AudioSourceProbe.unknownSource {
+            let running = NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier)
+            return !allowlist.isDisjoint(with: running)
+        }
+        return isAllowlisted(bundle)
+    }
+
+    /// Allowlisted exactly, or a component of an allowlisted app ("…Browser.helper").
     private static func isAllowlisted(_ bundle: String) -> Bool {
         if allowlist.contains(bundle) { return true }
         return allowlist.contains { bundle.hasPrefix($0 + ".") }
     }
 
-    /// True when an allowlisted app is running and could plausibly be the audio source.
-    static func allowsConnect() -> (allowed: Bool, reason: String) {
-        guard isEnabled else { return (true, "allowlist off") }
-
-        // Ask which apps are actually emitting audio, where the OS can tell us. Merely
-        // *running* is far too weak a test — a browser is always running, so any sound
-        // on the Mac used to pass this gate and pull the earbuds back.
-        if AudioSourceProbe.isSupported {
-            let playing = AudioSourceProbe.playingBundleIDs()
-            guard !playing.isEmpty else { return (false, "nothing is playing") }
-
-            if let match = playing.first(where: { isAllowlisted($0) }) {
-                return (true, match)
-            }
-            let names = playing.sorted().joined(separator: ",")
-            return (false, "audio is from \(names), not an allowlisted app")
+    /// Display name for a bundle ID, for log lines and the panel note.
+    static func displayName(for bundle: String) -> String {
+        if bundle == AudioSourceProbe.unknownSource { return "this Mac" }
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundle) {
+            return FileManager.default.displayName(atPath: url.path)
+                .replacingOccurrences(of: ".app", with: "")
         }
-
-        // Older macOS has no per-process audio API: fall back to the running-app test.
-        let running = NSWorkspace.shared.runningApplications
-            .compactMap(\.bundleIdentifier)
-        let matches = allowlist.intersection(running)
-
-        guard !matches.isEmpty else {
-            return (false, "no allowlisted app running")
-        }
-
-        // Prefer naming the frontmost match — it's the most likely source and makes the
-        // log line useful when working out why a switch did or didn't happen.
-        if let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
-           matches.contains(front) {
-            return (true, front)
-        }
-        return (true, matches.sorted().joined(separator: ","))
+        return bundle
     }
 }

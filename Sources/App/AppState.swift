@@ -70,10 +70,6 @@ final class AppState: ObservableObject {
         didSet {
             UserDefaults.standard.set(isAutomationEnabled, forKey: "automationEnabled")
             Log.app.log("automation \(self.isAutomationEnabled ? "enabled" : "disabled", privacy: .public)")
-            // "Every automatic trigger" has to include the Galaxy Buds background poll,
-            // which lives outside this type and would otherwise keep connecting with the
-            // toggle visibly off.
-            BluetoothManager.automationEnabled = isAutomationEnabled
         }
     }
 
@@ -85,34 +81,18 @@ final class AppState: ObservableObject {
     /// the automation is actually watching, rather than looking inert.
     @Published private(set) var isPlaying = false
 
-    /// Set while the earbuds are away on another device.
+    /// When the earbuds last stopped being this Mac's output.
     ///
-    /// Its only job is to veto the Galaxy Buds background poll, which would otherwise
-    /// reclaim them with nothing on this Mac asking for audio. Playback, the hotkey and
-    /// the panel button all still connect immediately — they are real requests.
-    /// When the earbuds last became free, so playback can be judged as new or pre-existing.
-    ///
-    /// Cleared once claimed, so a single release grants one window rather than leaving
-    /// the Mac permanently eligible to reclaim them.
-    private var budsBecameFreeAt: Date?
+    /// Losing the route moves whatever was playing onto the speakers, and some apps
+    /// restart their stream to do it. That restart looks like a fresh start but is the
+    /// same audio as before, so starts in the moments after a route loss are ignored.
+    private var routeLostAt: Date?
 
-    /// How long after the earbuds are freed a playback start still counts as "fresh".
-    ///   defaults write com.budswitch.mac freshAudioSeconds -int 8
-    private static var freshAudioWindow: TimeInterval {
-        let seconds = UserDefaults.standard.object(forKey: "freshAudioSeconds") as? Int ?? 4
-        return TimeInterval(max(1, min(seconds, 60)))
-    }
-
-    private var lastReleasedAt: Date? {
-        didSet {
-            // The Galaxy Buds layer polls its own auto-connect every 2s and would
-            // otherwise reclaim the earbuds regardless of anything decided here.
-            BluetoothManager.isParkedOnPhone = lastReleasedAt != nil
-        }
-    }
+    /// How long after a route loss a playback start is treated as the old audio moving.
+    private static let routeSettle: TimeInterval = 8
 
     private var arbiter = Arbiter()
-    private var audioMonitor: AudioMonitor?
+    private var playbackWatcher: PlaybackWatcher?
     private var idleMonitor: IdleMonitor?
     private var powerMonitor: PowerMonitor?
     private var hotkey: Hotkey?
@@ -189,11 +169,13 @@ final class AppState: ObservableObject {
     }
 
     private func startAutomation() {
-        let audio = AudioMonitor { [weak self] playing in
-            self?.handlePlayback(playing)
+        let watcher = PlaybackWatcher { [weak self] bundle in
+            self?.handlePlaybackStart(bundle: bundle)
+        } onPlayingChanged: { [weak self] playing in
+            self?.isPlaying = playing
         }
-        audio.start()
-        audioMonitor = audio
+        watcher.start()
+        playbackWatcher = watcher
 
         let idle = IdleMonitor { [weak self] in
             self?.handleRelease(trigger: .release, reason: "idle")
@@ -240,40 +222,28 @@ final class AppState: ObservableObject {
 
     // MARK: - Trigger handling
 
-    private func handlePlayback(_ playing: Bool) {
-        isPlaying = playing
+    /// An app began audibly playing. The only automatic way to this Mac.
+    private func handlePlaybackStart(bundle: String) {
+        guard automationAllowed(), !isRouted, !isBusy else { return }
 
-        // Playback stopping is not a release trigger on its own — pausing a track
-        // shouldn't hand the buds to your phone. Idle handles that.
-        guard playing else { return }
-        guard automationAllowed(), !isRouted else { return }
-
-        let gate = AppFocusMonitor.allowsConnect()
-        guard gate.allowed else {
-            note("ignored playback — \(gate.reason)")
+        let app = AppFocusMonitor.displayName(for: bundle)
+        guard AppFocusMonitor.permits(bundle: bundle) else {
+            note("ignored \(app) — not on the allowlist")
             return
         }
 
-        // Require audio that started *after* the earbuds became free.
-        //
-        // Browsers hold their output stream open across a pause — verified on Brave,
-        // whose process reports running output permanently once any tab has played. So
-        // the moment the earbuds leave, a paused Mac video still reads as "playing" and
-        // pulled them straight back off the phone. There is no CoreAudio property that
-        // separates playing from paused, so use timing instead: audio already under way
-        // when the earbuds were released is not a request for them.
-        if let freed = budsBecameFreeAt, Date().timeIntervalSince(freed) > Self.freshAudioWindow {
-            note("ignored playback — already playing when the earbuds left")
+        if let lost = routeLostAt, Date().timeIntervalSince(lost) < Self.routeSettle {
+            note("ignored \(app) — it was already playing when the earbuds left")
             return
         }
 
         let verdict = arbiter.permits(.playback)
         guard verdict.allowed else {
-            note("ignored playback — \(verdict.reason)")
+            note("ignored \(app) — \(verdict.reason)")
             return
         }
 
-        note("connecting — audio from \(gate.reason)")
+        note("connecting — \(app) started playing")
         arbiter.didSwitch(.playback)
         connect()
     }
@@ -302,8 +272,6 @@ final class AppState: ObservableObject {
         }
 
         note("releasing — \(reason)")
-        lastReleasedAt = Date()
-        budsBecameFreeAt = Date()
         arbiter.didSwitch(trigger)
         disconnect()
     }
@@ -356,9 +324,7 @@ final class AppState: ObservableObject {
 
     deinit {
         pollTimer?.invalidate()
-        // AudioMonitor holds CoreAudio listener blocks that outlive the object unless
-        // detached explicitly; without this its stop() was dead code.
-        audioMonitor?.stop()
+        playbackWatcher?.stop()
         hotkey?.stop()
     }
 
@@ -433,17 +399,11 @@ final class AppState: ObservableObject {
         isLinkedButIdle = !routed && AudioRouteProbe.outputDevice(forAddress: address) != nil
         if routed != isRouted {
             Log.audio.log("route changed: \(address, privacy: .public) routed=\(routed, privacy: .public)")
-            // The earbuds can leave without BudSwitch releasing them — a phone routine
-            // claims them, or you pick them there by hand. Park them just the same, or
-            // the background poll reclaims them within seconds and nothing on this Mac
-            // asked for them.
             if !routed {
-                // Starts the window in which newly-started audio may claim them.
-                budsBecameFreeAt = Date()
-                if lastReleasedAt == nil {
-                    lastReleasedAt = Date()
-                    note("left for another device")
-                }
+                routeLostAt = Date()
+                // Say so when it was not this app's doing — a phone routine claimed
+                // them, or they were picked on the phone by hand.
+                if !isBusy { note("left for another device") }
             }
         }
         isRouted = routed
@@ -487,14 +447,13 @@ final class AppState: ObservableObject {
     // MARK: - Actions
 
     func connect() {
-        // Whatever brought us here — hotkey, panel, playback — the earbuds are wanted
-        // on this Mac now, so they are no longer parked on the phone.
-        lastReleasedAt = nil
-        budsBecameFreeAt = nil
         run { address, done in BluetoothController.connect(address: address, completion: done) }
     }
 
     func disconnect() {
+        // Keep the data channel from re-opening against a link that is on its way
+        // down, which would bring the earbuds straight back.
+        BluetoothManager.holdOffAutoConnect(for: 10)
         run { address, done in BluetoothController.disconnect(address: address, completion: done) }
     }
 
@@ -537,9 +496,6 @@ final class AppState: ObservableObject {
         }
 
         arbiter.didSwitch(.manual)
-        // Sending them away arms the grace period; asking for them back clears it, since
-        // you have just said where you want them. An explicit request always wins.
-        lastReleasedAt = isRouted ? Date() : nil
         note(isRouted ? "released by you" : "connected by you")
         isRouted ? disconnect() : connect()
     }
@@ -593,10 +549,12 @@ final class AppState: ObservableObject {
                 guard let self else { return }
                 self.history.insert(record, at: 0)
                 if self.history.count > 10 { self.history.removeLast() }
+                // Read the route while still busy, so a route loss this operation
+                // caused is not reported as the earbuds leaving on their own.
+                self.refreshRoute()
                 self.isBusy = false
                 self.busyTimer?.invalidate()
                 self.busyTimer = nil
-                self.refreshRoute()
                 self.showResultHUD(record)
             }
         }

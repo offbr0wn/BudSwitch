@@ -26,12 +26,14 @@ fi
 # Build each architecture separately and join them, so the app runs on Intel Macs as well
 # as Apple Silicon. An arm64-only build simply will not launch on an Intel machine.
 echo "Compiling…"
+# Each arch gets its own scratch path: newer toolchains put every arch's product in the
+# same .build/out folder, so the second build overwrote the first and lipo failed.
 for arch in arm64 x86_64; do
-	swift build -c release --arch "$arch"
+	swift build -c release --arch "$arch" --scratch-path ".build/$arch"
 done
 
-ARM=$(swift build -c release --arch arm64 --show-bin-path)/$APP_NAME
-X86=$(swift build -c release --arch x86_64 --show-bin-path)/$APP_NAME
+ARM=$(swift build -c release --arch arm64 --scratch-path .build/arm64 --show-bin-path)/$APP_NAME
+X86=$(swift build -c release --arch x86_64 --scratch-path .build/x86_64 --show-bin-path)/$APP_NAME
 lipo -create -output "$APP/Contents/MacOS/$APP_NAME" "$ARM" "$X86"
 
 # SPM emits the processed resources (localisations, assets) as a .bundle beside the
